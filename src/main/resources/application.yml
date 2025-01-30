@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/mydb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE  # 🔥 파일 모드 사용 (데이터 유지)
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true  # 🔥 H2 콘솔 활성화
+      path: /h2-console  # 🔥 H2 콘솔 URL 지정
+      settings:
+        web-allow-others: true  # 🔥 다른 클라이언트에서도 접속 허용 (보안 주의)
+        trace: false  # 🔥 SQL 실행 로그 비활성화
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update  # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
+    show-sql: true
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}  # 🔥 환경 변수 사용 (보안 강화)
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+
+server:
+  error:
+    include-message: always  # 🔥 에러 메시지를 상세하게 출력
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG  # 🔥 보안 관련 로그 출력
