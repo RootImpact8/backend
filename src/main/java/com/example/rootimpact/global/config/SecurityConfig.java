@@ -18,4 +18,6 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.disable())); // 🔥 H2 콘솔 iframe 허용
         return http.build();
     }
+
 }
+
