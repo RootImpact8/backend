@@ -30,7 +30,7 @@ public class UserService {
         user.setEmail(registerRquest.getEmail());
         user.setName(registerRquest.getName());
         user.setPassword(encodedPassword);
-        user.setRegion(registerRquest.getRegion()); // 지역 정보 저장
+        //user.setRegion(registerRquest.getRegion()); // 지역 정보 저장
         userRepository.save(user);
     }
     public LoginResponse login(LoginRequest loginRequest) {

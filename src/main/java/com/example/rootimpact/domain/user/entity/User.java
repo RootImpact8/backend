@@ -22,7 +22,7 @@ public class User {
     private String email;
     private String password;
     private String name;
-    private String region; // 지역 정보 추가
+    //private String region; // 지역 정보 추가
 
     private LocalDate registerDate;
 
