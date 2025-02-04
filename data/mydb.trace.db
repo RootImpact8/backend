@@ -22,3 +22,15 @@ SELECT * FROM user [42001-232]
 2025-02-03 01:03:52.433343+09:00 jdbc[14]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM [*][*]user"; expected "identifier"; SQL statement:
 SELECT * FROM [*]user [42001-232]
+2025-02-04 16:53:06.385695+09:00 jdbc[15]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "HTE_FARM_DIARY" already exists; SQL statement:
+create global temporary table HTE_farm_diary(rn_ integer not null, write_date date, id bigint, user_id bigint, content TEXT, primary key (rn_)) TRANSACTIONAL [42101-232]
+2025-02-04 16:53:09.493175+09:00 jdbc[25]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "HTE_FARM_DIARY" already exists; SQL statement:
+create global temporary table HTE_farm_diary(rn_ integer not null, write_date date, id bigint, user_id bigint, content TEXT, primary key (rn_)) TRANSACTIONAL [42101-232]
+2025-02-04 16:53:12.972533+09:00 jdbc[35]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "HTE_FARM_DIARY" already exists; SQL statement:
+create global temporary table HTE_farm_diary(rn_ integer not null, write_date date, id bigint, user_id bigint, content TEXT, primary key (rn_)) TRANSACTIONAL [42101-232]
+2025-02-04 16:53:16.249672+09:00 jdbc[45]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "HTE_FARM_DIARY" already exists; SQL statement:
+create global temporary table HTE_farm_diary(rn_ integer not null, write_date date, id bigint, user_id bigint, content TEXT, primary key (rn_)) TRANSACTIONAL [42101-232]

@@ -30,7 +30,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()  // H2 콘솔 허용
-                        .requestMatchers("/login", "/register", "/api/user/register","/api/user/login").permitAll()  // 로그인 및 회원가입 허용
+                        .requestMatchers("/login", "/register", "/api/user/register","/api/user/login","/api/diary/**").permitAll()  // 로그인 및 회원가입 허용
                         .anyRequest().authenticated()  // 나머지 요청은 인증 필요
                 )
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화

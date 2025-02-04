@@ -16,7 +16,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create  # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
+      ddl-auto: update  # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
     show-sql: true
 
   ai:
