@@ -12,6 +12,7 @@ import com.example.rootimpact.domain.userInfo.repository.UserCropRepository;
 import com.example.rootimpact.domain.userInfo.repository.UserLocationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -97,31 +98,42 @@ public class UserInfoService {
         });
     }
 
-    /**
-     * ✅ 사용자 재배 작물 조회 (isInterestCrop = false)
-     * @param userId 사용자 ID
-     * @return List<UserCrop> 재배 작물 리스트
-     */
+    // ✅ **재배 작물 전체 조회 (Lazy Loading 문제 해결)**
+    @Transactional(readOnly = true)
     public List<UserCrop> getCultivatedCrops(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return userCropRepository.findByUser(user).stream()
-                .filter(crop -> !crop.isInterestCrop())
-                .collect(Collectors.toList());
+        return userCropRepository.findCultivatedCropsByUser(user);
     }
 
-    /**
-     * ✅ 사용자 관심 작물 조회 (isInterestCrop = true)
-     * @param userId 사용자 ID
-     * @return List<UserCrop> 관심 작물 리스트
-     */
+    // ✅ **관심 작물 전체 조회 (Lazy Loading 문제 해결)**
+    @Transactional(readOnly = true)
     public List<UserCrop> getInterestCrops(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        return userCropRepository.findInterestCropsByUser(user);
+    }
+    // 특정 재배 작물 조회
+    public UserCrop getSpecificCultivatedCrop(Long userId, String cropName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         return userCropRepository.findByUser(user).stream()
-                .filter(UserCrop::isInterestCrop)
-                .collect(Collectors.toList());
+                .filter(crop -> crop.getCropName().equals(cropName) && !crop.isInterestCrop())
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Cultivated crop not found"));
+    }
+
+    // 특정 관심 작물 조회
+    public UserCrop getSpecificInterestCrop(Long userId, String cropName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return userCropRepository.findByUser(user).stream()
+                .filter(crop -> crop.getCropName().equals(cropName) && crop.isInterestCrop())
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Interest crop not found"));
     }
 }

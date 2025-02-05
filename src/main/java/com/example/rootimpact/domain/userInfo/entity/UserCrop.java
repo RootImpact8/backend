@@ -1,6 +1,7 @@
 package com.example.rootimpact.domain.userInfo.entity;
 
 import com.example.rootimpact.domain.user.entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ public class UserCrop {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "user_id", nullable = false)  // ✅ 소문자로 설정
     private User user;
 
