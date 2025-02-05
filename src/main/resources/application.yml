@@ -17,15 +17,19 @@ spring:
       mode: never  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
       data-locations: classpath:data.sql
   jpa:
+
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: update  # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
+      ddl-auto: update # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
+      #transaction:
+       # jta:
+        #  platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
     defer-datasource-initialization: true  # ✅ data.sql을 실행하기 위해 필요
     show-sql: true
 
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}  # 🔥 환경 변수 사용 (보안 강화)
+      api-key:   # 🔥 환경 변수 사용 (보안 강화)
       chat:
         options:
           model: gpt-4o
