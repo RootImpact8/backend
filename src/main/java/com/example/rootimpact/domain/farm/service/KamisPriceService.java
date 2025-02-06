@@ -2,73 +2,81 @@ package com.example.rootimpact.domain.farm.service;
 
 import com.example.rootimpact.domain.farm.dto.KamisPriceResponse;
 import com.example.rootimpact.domain.user.entity.User;
-import com.example.rootimpact.domain.userInfo.entity.UserLocation;
-import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import com.example.rootimpact.domain.user.repository.UserRepository;
+import com.example.rootimpact.domain.userInfo.entity.UserCrop;
+import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class KamisPriceService {
 
-    private static final String API_KEY = "";//"a994e8f5-ce25-494c-8f9b-d12b77b0c8e4";
-    private static final String BASE_URL = "https://www.kamis.or.kr/service/price/xml.do?action=dailySalesList";
-    private final UserRepository userRepository;
     private final UserInfoService userInfoService;
+    private final UserRepository userRepository;
+    private final RestTemplate restTemplate;
 
-    public KamisPriceResponse getCropPriceInfo(Authentication authentication, String cropName) {
+    private final String MARKET_PRICE_URL = "https://at.agromarket.kr/openApi/price/real.do";
+    private final String API_KEY = "E279E46D7A1D4D85918EA25AAA6936B3"; // 발급받은 키
+
+    public KamisPriceResponse getPriceInfo(String cropName, Authentication authentication) {
         String userEmail = authentication.getName();
+
+        // 사용자 정보 조회
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ✅ 사용자 지역 정보 가져오기
-        UserLocation userLocation = userInfoService.getUserLocation(user.getId());
+        // 사용자의 재배 작물 정보 가져오기
+        UserCrop userCrop = userInfoService.getSpecificCultivatedCrop(user.getId(), cropName);
 
-        // ✅ 날짜 설정 (전날, 당일)
-        String today = LocalDate.now().toString().replace("-", "");
-        String yesterday = LocalDate.now().minusDays(1).toString().replace("-", "");
+        // API 요청 URL 생성
+        String url = generateMarketPriceUrl(cropName);
 
-        // ✅ KAMIS API 요청 URL 생성
-        String url = UriComponentsBuilder.fromHttpUrl(BASE_URL)
-                .queryParam("p_cert_key", API_KEY)
-                .queryParam("p_returntype", "json")
-                .queryParam("p_startday", yesterday)
-                .queryParam("p_endday", today)
-                .queryParam("p_countycode", getRegionCode(userLocation.getCity())) // 지역 코드 매핑
-                .build().toString();
-
-        // ✅ API 호출
-        RestTemplate restTemplate = new RestTemplate();
-        KamisPriceResponse response = restTemplate.getForObject(url, KamisPriceResponse.class);
-
-        // ✅ 사용자가 선택한 작물 필터링
-        List<KamisPriceResponse.PriceInfo> filteredPrices = response.getPriceList().stream()
-                .filter(price -> price.getItemName().equalsIgnoreCase(cropName))
-                .collect(Collectors.toList());
-
-        // ✅ 최종 응답 반환
-        return new KamisPriceResponse(filteredPrices);
+        // API 호출
+        return fetchMarketPrice(url, cropName);
     }
 
-    private String getRegionCode(String cityName) {
-        return switch (cityName) {
-            case "서울특별시" -> "1101";
-            case "부산광역시" -> "2100";
-            case "대구광역시" -> "2200";
-            case "인천광역시" -> "2300";
-            case "광주광역시" -> "2400";
-            case "대전광역시" -> "2500";
-            case "울산광역시" -> "2600";
-            case "세종특별자치시" -> "2700";
-            default -> "1101"; // 기본값 (서울)
+    private String generateMarketPriceUrl(String cropName) {
+        return MARKET_PRICE_URL +
+                "?serviceKey=" + API_KEY +
+                "&apiType=json" +
+                "&pageNo=1" +
+                "&whsalCd=110001" + // 서울 가락시장 코드
+                "&midCd=" + mapCropToMidCd(cropName); // 중분류 코드 매핑
+    }
+
+    private String mapCropToMidCd(String cropName) {
+        // 도매시장 API에 따른 작물 중분류 코드 매핑
+        return switch (cropName) {
+            case "감자" -> "01"; // 감자 중분류 코드
+            case "고구마" -> "02"; // 고구마 중분류 코드
+            case "쌀" -> "03"; // 쌀 중분류 코드
+            default -> "00"; // 기본값 (조회 불가능한 경우)
         };
+    }
+
+    private KamisPriceResponse fetchMarketPrice(String url, String cropName) {
+        try {
+            // API 응답 데이터 처리
+            var response = restTemplate.getForObject(url, Map.class);
+
+            if (response != null && response.containsKey("data")) {
+                Map<String, Object> data = (Map<String, Object>) response.get("data");
+
+                return KamisPriceResponse.builder()
+                        .cropName(cropName)
+                        .wholesaleMarketName(data.get("whsalName").toString())
+                        .saleDate(data.get("saleDate").toString())
+                        .price(data.get("price").toString())
+                        .build();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to fetch market price: " + e.getMessage());
+        }
+        throw new RuntimeException("No market price data available");
     }
 }

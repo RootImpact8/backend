@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/farm")
@@ -26,13 +28,16 @@ public class FarmController {
     private final UserInfoService userInfoService;
     private final KamisPriceService kamisPriceService;
 
-    // ✅ 작물 가격 정보 조회
-    @GetMapping("/crop-price")
+
+
+
+    // ✅ 도매시장 실시간 경락가 조회
+    @GetMapping("/api/farm/price")
     public ResponseEntity<KamisPriceResponse> getCropPrice(
             @RequestParam String cropName,
             Authentication authentication
     ) {
-        KamisPriceResponse response = kamisPriceService.getCropPriceInfo(authentication, cropName);
+        KamisPriceResponse response = kamisPriceService.getPriceInfo(cropName, authentication);
         return ResponseEntity.ok(response);
     }
 
