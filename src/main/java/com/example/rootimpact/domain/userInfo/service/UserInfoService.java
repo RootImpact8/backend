@@ -116,6 +116,7 @@ public class UserInfoService {
         return userCropRepository.findInterestCropsByUser(user);
     }
     // 특정 재배 작물 조회
+    @Transactional(readOnly = true)
     public UserCrop getSpecificCultivatedCrop(Long userId, String cropName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -127,6 +128,7 @@ public class UserInfoService {
     }
 
     // 특정 관심 작물 조회
+    @Transactional(readOnly = true)
     public UserCrop getSpecificInterestCrop(Long userId, String cropName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -136,4 +138,9 @@ public class UserInfoService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Interest crop not found"));
     }
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
 }
