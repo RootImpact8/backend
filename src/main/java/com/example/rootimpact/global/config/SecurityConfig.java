@@ -29,7 +29,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll()  // H2 콘솔 허용
+                        .requestMatchers("/h2-console/**").permitAll()// H2 콘솔 허용
                         .requestMatchers("/login", "/register", "/api/user/register","/api/user/login").permitAll()  // 로그인 및 회원가입 허용
                         .anyRequest().authenticated()  // 나머지 요청은 인증 필요
                 )
