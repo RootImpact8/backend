@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WeatherService {
 
-    private final String API_KEY = "a42b1a756c394b6eb03132303250202"; // Weather API 키
+    private final String API_KEY = "";//"a42b1a756c394b6eb03132303250202"; // Weather API 키
     private final String BASE_URL = "http://api.weatherapi.com/v1/forecast.json"; // Weather API URL
     private final UserInfoService userInfoService;
     private final UserRepository userRepository;
