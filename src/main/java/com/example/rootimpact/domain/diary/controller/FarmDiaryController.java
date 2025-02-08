@@ -2,18 +2,18 @@ package com.example.rootimpact.domain.diary.controller;
 
 import com.example.rootimpact.domain.diary.dto.FarmDiaryRequest;
 import com.example.rootimpact.domain.diary.dto.FarmDiaryResponse;
-import com.example.rootimpact.domain.diary.entity.FarmDiary;
+import com.example.rootimpact.domain.diary.dto.TaskReponseDto;
+import com.example.rootimpact.domain.diary.dto.UserCropResponseDto;
 import com.example.rootimpact.domain.diary.service.FarmDiaryService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.example.rootimpact.domain.user.entity.User;
+import com.example.rootimpact.domain.user.repository.UserRepository;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
-import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,12 +26,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/diary")
 @RequiredArgsConstructor
-@Tag(name = "Farm Diary", description = "농사 일지 API")
 public class FarmDiaryController {
 
     private final FarmDiaryService farmDiaryService;
+    private final UserRepository userRepository;
 
-    @Operation(summary = "일기 생성", description = "새로운 농사 일지를 생성합니다.")
+    // 작업 유형 조회
+    @GetMapping("/tasks/{cropName}")
+    public ResponseEntity<List<TaskReponseDto>> getTasksByCrop(@PathVariable("cropName") String cropName) {
+        return ResponseEntity.ok(farmDiaryService.getTaskTypes(cropName));
+    }
+
+    // 사용자별 재배 작물 조회
+    @GetMapping("/user-crops")
+    public ResponseEntity<List<UserCropResponseDto>> getUserCrops(Authentication authentication) {
+        String userEmail = authentication.getName();
+        User user = userRepository.findByEmail(userEmail)
+                            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(farmDiaryService.getUserCrops(user.getId()));
+    }
+
+    // 일기 생성
     @PostMapping
     public ResponseEntity<FarmDiaryResponse> createFarmDiary(
             @Valid @RequestBody FarmDiaryRequest request) {
@@ -39,7 +55,7 @@ public class FarmDiaryController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "일기 수정", description = "기존 농사 일지를 수정합니다.")
+    // 일기 수정
     @PutMapping("/{id}")
     public ResponseEntity<FarmDiaryResponse> updateFarmDiary(
             @PathVariable("id") Long id,
@@ -48,7 +64,7 @@ public class FarmDiaryController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "일기 조회", description = "ID로 농사 일지를 조회합니다.")
+    // 일기 조회
     @GetMapping("/{id}")
     public ResponseEntity<FarmDiaryResponse> findById(
             @PathVariable("id") Long id) {
@@ -56,13 +72,13 @@ public class FarmDiaryController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "사용자 일기 목록 조회", description = "특정 사용자의 모든 농사 일지를 조회합니다.")
+    // 사용자별 일기 조회
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<FarmDiaryResponse>> findByUserId(@PathVariable("userId") Long userId) {
         return ResponseEntity.ok(farmDiaryService.findByUserId(userId));
     }
 
-    @Operation(summary = "날짜별 일기 목록 조회", description = "특정 날짜의 농사 일지를 조회합니다.")
+    // 날짜별 일기 조회
     @GetMapping("/date/{writeDate}")
     public ResponseEntity<List<FarmDiaryResponse>> findByWriteDate(
             @PathVariable("writeDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate writeDate) {
@@ -70,7 +86,13 @@ public class FarmDiaryController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "일기 삭제", description = "농사 일지를 삭제합니다.")
+    // 작물별 일기 조회
+    @GetMapping("/crops/{cropName}")
+    public ResponseEntity<List<FarmDiaryResponse>> findByCropName(@PathVariable("cropName") String cropName) {
+        return ResponseEntity.ok(farmDiaryService.findByCropName(cropName));
+    }
+
+    // 일기 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFarmDiary(
             @PathVariable("id") Long id) {

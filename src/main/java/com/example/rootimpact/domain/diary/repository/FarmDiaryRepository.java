@@ -12,5 +12,6 @@ public interface FarmDiaryRepository extends JpaRepository<FarmDiary, Long> {
     List<FarmDiary> findByUserId(Long userId);
     // 작성일로 일기 목록 조회
     List<FarmDiary> findByWriteDate(LocalDate writeDate);
-
+    // 작물별로 일기 조회
+    List<FarmDiary> findByUserCrop_CropName(String cropName);
 }
