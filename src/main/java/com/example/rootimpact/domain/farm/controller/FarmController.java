@@ -1,11 +1,11 @@
 package com.example.rootimpact.domain.farm.controller;
 
 import com.example.rootimpact.domain.farm.dto.AiNewsResponse;
-import com.example.rootimpact.domain.farm.dto.AiRecommendationResponse;
+//import com.example.rootimpact.domain.farm.dto.AiRecommendationResponse;
 import com.example.rootimpact.domain.farm.dto.KamisPriceResponse;
 import com.example.rootimpact.domain.farm.dto.WeatherResponse;
 import com.example.rootimpact.domain.farm.service.AiNewsService;
-import com.example.rootimpact.domain.farm.service.AiRecommendationService;
+//import com.example.rootimpact.domain.farm.service.AiRecommendationService;
 import com.example.rootimpact.domain.farm.service.KamisPriceService;
 import com.example.rootimpact.domain.farm.service.WeatherService;
 import com.example.rootimpact.domain.user.entity.User;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("/api/farm")
 public class FarmController {
 
-    private final AiRecommendationService aiRecommendationService;
+    //private final AiRecommendationService aiRecommendationService;
     private final AiNewsService aiNewsService;
     private final WeatherService weatherService;
     private final UserInfoService userInfoService;
@@ -67,7 +67,7 @@ public class FarmController {
     }
 
 
-
+    /**
     // ✅ 4️⃣ 재배 작물에 대한 AI 추천 활동 요청
     @GetMapping("/recommendation/cultivated-crop")
     public ResponseEntity<AiRecommendationResponse> getCultivatedCropRecommendation(
@@ -84,4 +84,5 @@ public class FarmController {
         AiRecommendationResponse response = aiRecommendationService.getRecommendationForCrop(cropName, authentication);
         return ResponseEntity.ok(response);
     }
+     **/
 }
