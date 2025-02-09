@@ -10,18 +10,13 @@ import com.example.rootimpact.domain.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/diary")
@@ -98,5 +93,34 @@ public class FarmDiaryController {
             @PathVariable("id") Long id) {
         farmDiaryService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ✅ 특정 작물의 첫 번째 일기 작성 날짜(파종일) 조회
+    @GetMapping("/first-diary-date")
+    public ResponseEntity<LocalDate> getFirstDiaryDate(
+            @RequestParam Long userId,
+            @RequestParam String cropName) {
+
+        LocalDate firstDiaryDate = farmDiaryService.getFirstDiaryDate(userId, cropName);
+        return ResponseEntity.ok(firstDiaryDate);
+    }
+
+    // ✅ 특정 작물의 예상 수확일 조회
+    @GetMapping("/ai-harvest-estimate")
+    public ResponseEntity<String> getHarvestEstimate(
+            @RequestParam Long userId,
+            @RequestParam String cropName) {
+
+        String harvestEstimate = farmDiaryService.getPredictedHarvestDate(userId, cropName);
+        return ResponseEntity.ok(harvestEstimate);
+    }
+    // ✅ 인증 없이 특정 사용자의 특정 작물의 "가장 마지막 일기" 조회 API
+    @GetMapping("/last-diary")
+    public ResponseEntity<FarmDiaryResponse> getLastDiaryEntry(
+            @RequestParam Long userId,
+            @RequestParam String cropName) {
+
+        FarmDiaryResponse lastDiary = farmDiaryService.getLastDiaryEntry(userId, cropName);
+        return ResponseEntity.ok(lastDiary);
     }
 }

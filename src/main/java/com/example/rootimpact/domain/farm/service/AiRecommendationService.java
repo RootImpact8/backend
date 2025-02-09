@@ -1,5 +1,5 @@
 package com.example.rootimpact.domain.farm.service;
-
+/**
 import com.example.rootimpact.domain.farm.dto.AiRecommendationResponse;
 import com.example.rootimpact.domain.farm.dto.WeatherResponse;
 import com.example.rootimpact.domain.user.entity.User;
@@ -69,4 +69,6 @@ public class AiRecommendationService {
                 .answer(aiResponse)
                 .build();
     }
+
 }
+ **/

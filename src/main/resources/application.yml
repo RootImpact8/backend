@@ -31,11 +31,14 @@ spring:
 
   ai:
     openai:
-      api-key: #openkey
-      chat:
+      api-key:
+        chat:
         options:
           model: gpt-4o
           temperature: 0.7
+
+
+
 
 server:
   error:

@@ -21,7 +21,7 @@ public class KamisPriceService {
     private final RestTemplate restTemplate;
 
     private final String MARKET_PRICE_URL = "https://at.agromarket.kr/openApi/price/real.do";
-    private final String API_KEY = "";//"E279E46D7A1D4D85918EA25AAA6936B3"; // 발급받은 키
+    private final String API_KEY = ""; //"E279E46D7A1D4D85918EA25AAA6936B3"; // 발급받은 키
 
     public KamisPriceResponse getPriceInfo(String cropName, Authentication authentication) {
         String userEmail = authentication.getName();

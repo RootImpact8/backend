@@ -117,7 +117,7 @@ public class UserInfoController {
         return ResponseEntity.ok(crops);
     }
 
-    // ✅ 특정 재배 작물 조회 (인증 필요)
+    // ✅ 특정 재배 작물 개별 조회 (인증 필요)
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/crops/cultivated/{cropName}")
@@ -131,7 +131,7 @@ public class UserInfoController {
         return ResponseEntity.ok(crop);
     }
 
-    // ✅ 특정 관심 작물 조회 (인증 필요)
+    // ✅ 특정 관심 작물 개별 조회 (인증 필요)
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/crops/interest/{cropName}")
