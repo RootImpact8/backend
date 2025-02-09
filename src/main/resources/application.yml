@@ -31,13 +31,11 @@ spring:
 
   ai:
     openai:
-      api-key:
-        chat:
+      api-key: ##
+      chat:
         options:
           model: gpt-4o
           temperature: 0.7
-
-
 
 
 server:
@@ -48,3 +46,9 @@ logging:
   level:
     root: INFO
     org.springframework.security: DEBUG  # 🔥 보안 관련 로그 출력
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
