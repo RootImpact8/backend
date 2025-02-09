@@ -19,6 +19,7 @@ import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -195,5 +196,14 @@ public class FarmDiaryService {
         // ✅ AI 요청 (예상 수확일 반환)
         return openAiService.getRecommendation(promptTemplate, variables);
     }
+    // ✅ 특정 작물에 대한 마지막 작성 일기 조회
+    @Transactional(readOnly = true)
+    public FarmDiaryResponse getLastDiaryEntry(Long userId, String cropName) {
+        Optional<FarmDiary> lastDiary = farmDiaryRepository.findTopByUserIdAndUserCrop_CropNameOrderByWriteDateDesc(userId, cropName);
+
+        return lastDiary.map(FarmDiaryResponse::new)
+                .orElseThrow(() -> new RuntimeException("해당 작물에 대한 작성된 영농일기가 없습니다."));
+    }
+
 
 }

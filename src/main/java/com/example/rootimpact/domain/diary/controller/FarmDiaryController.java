@@ -114,4 +114,13 @@ public class FarmDiaryController {
         String harvestEstimate = farmDiaryService.getPredictedHarvestDate(userId, cropName);
         return ResponseEntity.ok(harvestEstimate);
     }
+    // ✅ 인증 없이 특정 사용자의 특정 작물의 "가장 마지막 일기" 조회 API
+    @GetMapping("/last-diary")
+    public ResponseEntity<FarmDiaryResponse> getLastDiaryEntry(
+            @RequestParam Long userId,
+            @RequestParam String cropName) {
+
+        FarmDiaryResponse lastDiary = farmDiaryService.getLastDiaryEntry(userId, cropName);
+        return ResponseEntity.ok(lastDiary);
+    }
 }

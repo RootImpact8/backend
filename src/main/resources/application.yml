@@ -37,6 +37,9 @@ spring:
           model: gpt-4o
           temperature: 0.7
 
+
+
+
 server:
   error:
     include-message: always  # 🔥 에러 메시지를 상세하게 출력
