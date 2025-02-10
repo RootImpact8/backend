@@ -4,11 +4,15 @@ import com.example.rootimpact.domain.farm.dto.CropInfo;
 import com.example.rootimpact.domain.farm.dto.KamisPriceResponse;
 import com.example.rootimpact.domain.farm.type.CropType;
 import com.example.rootimpact.domain.farm.util.DateUtils;
+import com.example.rootimpact.domain.userInfo.entity.UserCrop;
+import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -29,6 +33,27 @@ public class KamisPriceService {
 
     private final String CERT_KEY = ""; //"a994e8f5-ce25-494c-8f9b-d12b77b0c8e4" 발급받은 키
     private final String CERT_ID = ""; // "5266" 발급받은 ID
+    private final UserInfoService userInfoService;
+
+    // 사용자 재배 작물들의 가격 정보 조회
+    public List<KamisPriceResponse> getUserCropsPriceInfo(Long userId) {
+        // 사용자의 재배 작물 목록 조회
+        List<UserCrop> cultivatedCrops = userInfoService.getCultivatedCrops(userId);
+
+        // 각 작물별 가격 정보 조회 -> 리스트로 변환
+        return cultivatedCrops.stream()
+                       .map(userCrop -> {
+                           try {
+                               // 작물의 가격 정보 조회
+                               return getPriceInfo(userCrop.getCropName());
+                           } catch (Exception e) {
+                               log.error("작물 {} 가격 조회 실패: {}", userCrop.getCropName(), e.getMessage());
+                               // 에러 발생 시 해당 작물에 대한 빈 응답 반환
+                               return createEmptyResponse(userCrop.getCropName());
+                           }
+                       })
+                       .collect(Collectors.toList());
+    }
 
     // 작물 가격 조회
     public KamisPriceResponse getPriceInfo(String cropName) {
