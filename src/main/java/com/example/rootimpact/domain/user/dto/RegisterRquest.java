@@ -15,6 +15,6 @@ public class RegisterRquest {
     @Schema(description = "사용자 비밀번호", example = "password123", required = true)
     private String password;
 
-    @Schema(description = "사용자 이름", example = "홍길동", required = true)
-    private String name;
+    //@Schema(description = "사용자 이름", example = "홍길동", required = true)
+    //private String name;
 }
