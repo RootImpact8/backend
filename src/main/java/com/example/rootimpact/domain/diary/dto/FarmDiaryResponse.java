@@ -20,16 +20,16 @@ public class FarmDiaryResponse {
     @Schema(description = "작성 날짜 (yyyy-MM-dd)", example = "2023-09-15")
     private LocalDate writeDate;
 
-    @Schema(description = "작물명", example = "Tomato")
+    @Schema(description = "작물명", example = "감자")
     private String cropName;
 
-    @Schema(description = "작업명", example = "Watering")
+    @Schema(description = "작업명", example = "활동명")
     private String taskName;
 
-    @Schema(description = "작업 분류", example = "Irrigation")
+    @Schema(description = "작업 분류", example = "휴식")
     private String taskCategory;
 
-    @Schema(description = "일기 내용", example = "Watered the plants thoroughly.")
+    @Schema(description = "일기 내용", example = "물주기를 했습니다.")
     private String content;
 
     // 엔티티를 DTO로 변환하는 생성자

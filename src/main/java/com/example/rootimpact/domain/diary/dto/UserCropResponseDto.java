@@ -13,7 +13,7 @@ public class UserCropResponseDto {
     @Schema(description = "사용자 작물 ID", example = "5")
     private Long id;
 
-    @Schema(description = "작물명", example = "Carrot")
+    @Schema(description = "작물명", example = "감자")
     private String cropName;
 
     public UserCropResponseDto(UserCrop userCrop) {

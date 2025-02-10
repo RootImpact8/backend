@@ -13,10 +13,10 @@ public class TaskReponseDto {
     @Schema(description = "작업 ID", example = "10")
     private Long id;
 
-    @Schema(description = "작업 이름", example = "Weeding")
+    @Schema(description = "작업 이름", example = "1차~~")
     private String name;
 
-    @Schema(description = "작업 분류", example = "Maintenance")
+    @Schema(description = "작업 분류", example = "휴식")
     private String category;
 
     public TaskReponseDto(Task task) {

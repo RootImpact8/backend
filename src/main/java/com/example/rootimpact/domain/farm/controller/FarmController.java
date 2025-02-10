@@ -39,9 +39,10 @@ public class FarmController {
     private final UserInfoService userInfoService;
     private final KamisPriceService kamisPriceService;
     private final FarmActivateService farmActivateService;
-
+    @Operation(summary = "유저 전체 작물 가격정보 비교",description = "재배를 실시간 가격정보를 가져와 가격을 전날과비교해서 가격비교 반환")
     @GetMapping("/user-crops/price")
     public ResponseEntity<List<KamisPriceResponse>> getUserCropsPrice(
+            @Parameter(description = "사용자 ID", required = true, example = "1")
             @RequestParam(name = "userId") Long userId) {
         List<KamisPriceResponse> priceResponses = kamisPriceService.getUserCropsPriceInfo(userId);
         return ResponseEntity.ok(priceResponses);
@@ -55,14 +56,15 @@ public class FarmController {
     public ResponseEntity<AiRecommendationResponse> getAiRecommendation(
             @Parameter(description = "사용자 ID", required = true, example = "1")
             @RequestParam Long userId,
-            @Parameter(description = "작물명", required = true, example = "Tomato")
+            @Parameter(description = "작물명", required = true, example = "감자")
             @RequestParam String cropName) {
         AiRecommendationResponse recommendation = farmActivateService.getAiRecommendation(userId, cropName);
         return ResponseEntity.ok(recommendation);
     }
-
+    @Operation(summary = "작물 가격정보",description = "유저와상관없이 작물가격정보를 검색하면  가격반환")
     @GetMapping("/price")
     public ResponseEntity<?> getCropPrice(
+            @Parameter(description = "작물명",required = true,example = "감자")
             @RequestParam(name = "cropName", required = true) String cropName) {
         try {
             if (!StringUtils.hasText(cropName)) {
@@ -112,7 +114,7 @@ public class FarmController {
     )
     @GetMapping("/crop-news")
     public ResponseEntity<AiNewsResponse> getCropNews(
-            @Parameter(description = "작물명", required = true, example = "Corn")
+            @Parameter(description = "작물명", required = true, example = "감자")
             @RequestParam String cropName,
             @Parameter(hidden = true) Authentication authentication) {
         String userEmail = authentication.getName();

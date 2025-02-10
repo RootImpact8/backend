@@ -18,7 +18,7 @@ public class FarmDiaryRequest {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate writeDate;
 
-    @Schema(description = "사용자 작물명", example = "Tomato", required = true)
+    @Schema(description = "사용자 작물명", example = "감자", required = true)
     private String userCropName;
 
     @Schema(description = "작업 ID", example = "2", required = true)
