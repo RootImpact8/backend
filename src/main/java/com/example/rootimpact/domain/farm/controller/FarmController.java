@@ -10,6 +10,7 @@ import com.example.rootimpact.domain.user.entity.User;
 import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import com.example.rootimpact.global.error.ErrorResponse;
 import java.util.Arrays;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,8 +35,12 @@ public class FarmController {
     private final UserInfoService userInfoService;
     private final KamisPriceService kamisPriceService;
 
-
-
+    // 사용자 재배 작물의 가격 정보 요청
+    @GetMapping("/user-crops/price")
+    public ResponseEntity<List<KamisPriceResponse>> getUserCropsPrice(@RequestParam(name = "userId") Long userId) {
+        List<KamisPriceResponse> priceResponses = kamisPriceService.getUserCropsPriceInfo(userId);
+        return ResponseEntity.ok(priceResponses);
+    }
 
     // 작물 가격 조회 & 변동률, 가격 변동 상태
     @GetMapping("/price")
