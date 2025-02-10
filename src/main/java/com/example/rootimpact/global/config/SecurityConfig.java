@@ -4,6 +4,7 @@ import com.example.rootimpact.global.util.JwtUtil;
 import com.example.rootimpact.global.securtiy.JwtAuthenticationFilter; // 경로 수정
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,14 +29,35 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {
+                    // 필요 시, 커스텀 CORS 설정을 추가할 수 있습니다.
+                    // 예:
+                    // cors.configurationSource(request -> {
+                    //     CorsConfiguration config = new CorsConfiguration();
+                    //     config.setAllowedOrigins(List.of("*"));
+                    //     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    //     config.setAllowedHeaders(List.of("*"));
+                    //     config.setAllowCredentials(true);
+                    //     return config;
+                    // });
+                })
+                .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/h2-console/**").permitAll()  // H2 콘솔 허용
-                        .requestMatchers("/login", "/register", "/api/user/register","/api/user/login","/api/diary/**", "/api/farm/price").permitAll()  // 로그인 및 회원가입 허용
-                        .anyRequest().authenticated()  // 나머지 요청은 인증 필요
+                        // OPTIONS 메서드에 대한 요청 모두 허용 (preflight 요청 처리)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-resources/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/webjars/**",
+                                "/h2-console/**"
+                        ).permitAll()
+                        .requestMatchers("/login", "/register", "/api/user/register", "/api/user/login", "/api/diary/**","/api/farm/price").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // H2 콘솔 iframe 허용
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);  // JWT 필터 추가
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

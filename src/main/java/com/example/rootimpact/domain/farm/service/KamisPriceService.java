@@ -31,8 +31,8 @@ public class KamisPriceService {
 
     private final RestTemplate restTemplate;
 
-    private final String CERT_KEY = ""; //"a994e8f5-ce25-494c-8f9b-d12b77b0c8e4" 발급받은 키
-    private final String CERT_ID = ""; // "5266" 발급받은 ID
+    private final String CERT_KEY ="";//"a994e8f5-ce25-494c-8f9b-d12b77b0c8e4"; //발급받은 키
+    private final String CERT_ID = ""; //"5266"; //발급받은 ID
     private final UserInfoService userInfoService;
 
     // 사용자 재배 작물들의 가격 정보 조회

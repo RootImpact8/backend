@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+
 import org.springframework.ai.openai.OpenAiChatClient;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +14,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class OpenAiService {
 
-    private final OpenAiChatClient openAiChatClient;
-    // private final OpenAiChatModel openAiChatModel;
+
+     private final OpenAiChatClient openAiChatClient;
 
     public String getRecommendation(String promptTemplateText, Map<String, Object> variables) {
         // ✅ 프롬프트 템플릿 생성

@@ -25,7 +25,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 로그인과 회원가입 요청은 JWT 인증을 요구하지 않음
         String uri = request.getRequestURI();
-        if (uri.equals("/login") || uri.equals("/register") || uri.startsWith("/api/user/register")||uri.startsWith("/api/user/login")) {
+        // Swagger 및 인증이 필요 없는 경로 필터링 제외
+        if (uri.equals("/v3/api-docs") || uri.startsWith("/v3/api-docs") || uri.startsWith("/swagger-ui") || uri.startsWith("/swagger-resources") ||
+                uri.startsWith("/webjars") || uri.equals("/login") || uri.equals("/register") ||
+                uri.startsWith("/api/user/register") || uri.startsWith("/api/user/login")) {
             filterChain.doFilter(request, response);
             return;
         }
