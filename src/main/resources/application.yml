@@ -31,7 +31,7 @@ spring:
 
   ai:
     openai:
-      api-key: ##
+      api-key:
       chat:
         options:
           model: gpt-4o
