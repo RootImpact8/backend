@@ -1,18 +1,18 @@
 package com.example.rootimpact.domain.farm.dto;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 @Builder
 @AllArgsConstructor
 public class KamisPriceResponse {
     private String itemName; // 작물명
-    private List<RegionPriceInfo> regionPrices; // 지역별 가격 정보 목록
-    private String startDate; // 조회 시작일
-    private String endDate; // 조회 종료일
+    private String previousDate; // 이전일: localdate - 2
+    private Double previousPrice; // 이전일 가격
+    private String currentDate; // 현재일 localdate - 1
+    private Double currentPrice; // 현재일 가격
+    private Double changeRate; // 변동률(%)
+    private String priceStatus; // 가격 상태(상승/하락/동일)
 }

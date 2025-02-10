@@ -59,7 +59,7 @@ public class FarmController {
             KamisPriceResponse response = kamisPriceService.getPriceInfo(cropName);
 
             // 조회된 데이터가 없는 경우
-            if (response.getRegionPrices() == null || response.getRegionPrices().isEmpty()) {
+            if (response.getPreviousPrice() == null || response.getCurrentPrice() == null) {
                 return ResponseEntity.ok()
                                .body(new ErrorResponse("해당 작물의 가격 정보가 없습니다."));
             }
