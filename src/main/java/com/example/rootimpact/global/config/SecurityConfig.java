@@ -54,7 +54,7 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/h2-console/**"
                         ).permitAll()
-                        .requestMatchers("/login", "/register", "/api/user/register", "/api/user/login", "/api/diary/**").permitAll()
+                        .requestMatchers("/login", "/register", "/api/user/register", "/api/user/login", "/api/diary/**","/api/farm/price").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
