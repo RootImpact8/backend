@@ -16,10 +16,10 @@ spring:
         trace: false  # 🔥 SQL 실행 로그 비활성화
   sql:
     init:
-      mode: never  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
+      mode: never #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
       data-locations: classpath:data.sql
-  jpa:
 
+  jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
@@ -29,6 +29,14 @@ spring:
     defer-datasource-initialization: true  # ✅ data.sql을 실행하기 위해 필요
     show-sql: true
 
+  # 파일 업로드 설정 추가
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB        # 단일 파일 최대 크기
+      max-request-size: 50MB     # 요청당 최대 파일 크기
+      location: ${java.io.tmpdir} # 임시 저장 경로
+
   ai:
     openai:
       api-key:
@@ -37,6 +45,12 @@ spring:
           model: gpt-4o
           temperature: 0.7
 
+# 파일 업로드 커스텀 설정
+file:
+  upload:
+    path: ${user.home}/uploads/     # 실제 파일이 저장될 경로
+    allowed-types: image/jpeg,image/png,image/gif  # 허용할 파일 타입
+    max-files: 5      # 한 번에 업로드 가능한 최대 파일 수
 
 server:
   error:
@@ -45,7 +59,8 @@ server:
 logging:
   level:
     root: INFO
-    org.springframework.security: DEBUG  # 🔥 보안 관련 로그 출력
+    org.springframework.security: DEBUG # 🔥 보안 관련 로그 출력
+    org.springframework.web.multipart: DEBUG  # 파일 업로드 관련 로그 추가
 
 springdoc:
   swagger-ui:
