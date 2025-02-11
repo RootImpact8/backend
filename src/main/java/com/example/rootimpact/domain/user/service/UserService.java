@@ -28,7 +28,7 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(registerRquest.getPassword());
         User user = new User();
         user.setEmail(registerRquest.getEmail());
-        user.setName(registerRquest.getName());
+        //user.setName(registerRquest.getName());
         user.setPassword(encodedPassword);
         //user.setRegion(registerRquest.getRegion()); // 지역 정보 저장
         userRepository.save(user);

@@ -2,6 +2,8 @@ package com.example.rootimpact.domain.userInfo.controller;
 
 import com.example.rootimpact.domain.userInfo.dto.CropSelectionRequest;
 import com.example.rootimpact.domain.userInfo.dto.LocationRequest;
+import com.example.rootimpact.domain.userInfo.dto.UpdateUserNameRequest;
+import com.example.rootimpact.domain.userInfo.dto.UserInfoResponse;
 import com.example.rootimpact.domain.userInfo.entity.Crop;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.entity.UserLocation;
@@ -30,6 +32,38 @@ public class UserInfoController {
 
     private final UserInfoService userInfoService;
     private final UserRepository userRepository;
+
+
+
+    // ✅ 사용자 이름 저장
+    @Operation(summary = "사용자 이름 저장", description = "회원가입 후 사용자 이름을 저장합니다.")
+    @PostMapping("/{userId}/name")
+    public ResponseEntity<String> saveUserName(
+            @PathVariable Long userId,
+            @RequestBody UpdateUserNameRequest request) {
+
+        userInfoService.saveUserName(userId, request.getName());
+        return ResponseEntity.ok("이름이 성공적으로 저장되었습니다.");
+    }
+
+    // ✅ 사용자 이름 수정
+    @Operation(summary = "사용자 이름 수정", description = "저장된 사용자 이름을 변경합니다.")
+    @PutMapping("/{userId}/name")
+    public ResponseEntity<String> updateUserName(
+            @PathVariable Long userId,
+            @RequestBody UpdateUserNameRequest request) {
+
+        userInfoService.updateUserName(userId, request.getName());
+        return ResponseEntity.ok("이름이 성공적으로 변경되었습니다.");
+    }
+
+    // ✅ 사용자 이름 조회
+    @Operation(summary = "사용자 이름 조회", description = "사용자 ID로 이름을 조회합니다.")
+    @GetMapping("/{userId}/name")
+    public ResponseEntity<UserInfoResponse> getUserName(@PathVariable Long userId) {
+        UserInfoResponse response = userInfoService.getUserName(userId);
+        return ResponseEntity.ok(response);
+    }
 
     @Operation(summary = "기본 작물 리스트 조회", description = "모든 사용자가 접근 가능한 기본 작물 리스트를 조회합니다.")
     @GetMapping("/crops")

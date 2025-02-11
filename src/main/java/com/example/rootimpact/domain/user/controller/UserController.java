@@ -42,4 +42,5 @@ public class UserController {
         LoginResponse response = userService.login(loginRequest);
         return ResponseEntity.ok(response);
     }
+
 }
