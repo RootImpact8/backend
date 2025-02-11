@@ -2,6 +2,7 @@ package com.example.rootimpact.domain.diary.entity;
 
 import com.example.rootimpact.domain.user.entity.User;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,8 +11,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -45,6 +49,9 @@ public class FarmDiary {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @OneToMany(mappedBy = "farmDiary", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DiaryImage> images = new ArrayList<>();
+
     @Builder
     public FarmDiary(long id, User user, LocalDate writeDate, UserCrop userCrop, Task task, String content) {
         this.id = id;
@@ -62,5 +69,24 @@ public class FarmDiary {
         if (userCrop != null) this.userCrop = userCrop;
         if (task != null) this.task = task;
         if (content != null) this.content = content;
+    }
+
+    public void setImages(List<DiaryImage> images) {
+        this.images = images;
+    }
+
+    // 이미지 관련 메서드
+    public void addImage(DiaryImage image) {
+        this.images.add(image);
+        image.setFarmDiary(this);
+    }
+
+    public void removeImage(DiaryImage image) {
+        this.images.remove(image);
+        image.setFarmDiary(null);
+    }
+
+    public void clearImages() {
+        this.images.clear();
     }
 }

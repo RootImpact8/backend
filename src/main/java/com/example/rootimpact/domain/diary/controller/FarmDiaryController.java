@@ -14,11 +14,22 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/diary")
 @RequiredArgsConstructor
@@ -46,21 +57,22 @@ public class FarmDiaryController {
     }
 
     @Operation(summary = "일기 생성", description = "새로운 일기를 생성합니다.")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FarmDiaryResponse> createFarmDiary(
-            @Valid @RequestBody
+            @Valid @ModelAttribute
             @Parameter(description = "일기 생성 요청 객체", required = true)
             FarmDiaryRequest request) {
+        log.debug("Received request: {}", request); // 로깅 추가
         FarmDiaryResponse response = farmDiaryService.create(request);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "일기 수정", description = "기존 일기를 수정합니다.")
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<FarmDiaryResponse> updateFarmDiary(
             @Parameter(description = "수정할 일기의 ID", required = true)
             @PathVariable("id") Long id,
-            @Valid @RequestBody
+            @Valid @ModelAttribute
             @Parameter(description = "수정할 일기 정보", required = true)
             FarmDiaryRequest request) {
         FarmDiaryResponse response = farmDiaryService.update(id, request);

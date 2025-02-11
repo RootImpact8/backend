@@ -1,29 +1,57 @@
 package com.example.rootimpact.domain.diary.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @Schema(description = "일기 생성 및 수정 요청 DTO")
 public class FarmDiaryRequest {
 
+    @NotNull(message = "사용자 ID는 필수입니다.")
     @Schema(description = "사용자 ID", example = "1", required = true)
     private Long userId;
 
+    @NotNull(message = "작성 날짜는 필수입니다.")
     @Schema(description = "작성 날짜 (yyyy-MM-dd)", example = "2023-09-15", required = true)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate writeDate;
 
+    @NotBlank(message = "작물명은 필수입니다.")
     @Schema(description = "사용자 작물명", example = "감자", required = true)
     private String userCropName;
 
+    @NotNull(message = "작업 ID는 필수입니다.")
     @Schema(description = "작업 ID", example = "2", required = true)
     private Long taskId;
 
+    @NotBlank(message = "일기 내용은 필수입니다.")
     @Schema(description = "일기 내용", example = "Planted new seeds.", required = true)
     private String content;
+
+    @Schema(description = "업로드할 이미지 파일들")
+    private List<MultipartFile> images;
+
+    @Schema(description = "삭제할 이미지 ID 목록")
+    private List<Long> deleteImageIds;
+
+    // 이미지 관련 getter 메서드들
+    public List<MultipartFile> getImages() {
+        return images != null ? images : new ArrayList<>();
+    }
+
+    public List<Long> getDeleteImageIds() {
+        return deleteImageIds != null ? deleteImageIds : new ArrayList<>();
+    }
+
 }
