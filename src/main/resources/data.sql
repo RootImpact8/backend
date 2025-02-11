@@ -109,6 +109,7 @@ INSERT INTO TASK (NAME, CROP_ID, CATEGORY) VALUES
 INSERT INTO TASK (NAME, CROP_ID, CATEGORY) VALUES
                                                ('💊 밑거름 시비', 4, '준비'),
                                                ('🌱 파종', 4, '준비'),
+                                               ('👩‍🌾 정식', 4, '준비'),
                                                ('🌱 육묘', 4, '준비'),
                                                ('🚜 로터리 작업', 4, '준비'),
                                                ('💦 배수로 정비', 4, '준비'),
