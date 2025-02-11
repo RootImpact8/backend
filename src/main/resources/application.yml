@@ -1,3 +1,4 @@
+
 spring:
   profiles:
     active: default
@@ -35,6 +36,7 @@ spring:
   ai:
     openai:
       api-key:
+
       chat:
         options:
           model: gpt-4o
