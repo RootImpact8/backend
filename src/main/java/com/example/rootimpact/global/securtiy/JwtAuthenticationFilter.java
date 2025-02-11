@@ -8,7 +8,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -23,11 +22,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 로그인과 회원가입 요청은 JWT 인증을 요구하지 않음
         String uri = request.getRequestURI();
-        // Swagger 및 인증이 필요 없는 경로 필터링 제외
-        if (uri.equals("/v3/api-docs") || uri.startsWith("/v3/api-docs") || uri.startsWith("/swagger-ui") || uri.startsWith("/swagger-resources") ||
-                uri.startsWith("/webjars") || uri.equals("/login") || uri.equals("/register") ||
+
+        // ✅ Swagger 및 인증이 필요 없는 경로는 필터링 제외
+        if (uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs") ||
+                uri.startsWith("/swagger-resources") || uri.startsWith("/webjars") ||
+                uri.equals("/login") || uri.equals("/register") ||
                 uri.startsWith("/api/user/register") || uri.startsWith("/api/user/login")) {
             filterChain.doFilter(request, response);
             return;
@@ -35,21 +35,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = request.getHeader("Authorization");
 
-        // Authorization 헤더에서 Bearer 토큰 추출
+        // ✅ JWT 토큰 검증 후 인증 처리
         if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7); // "Bearer " 제거
-            System.out.println("Extracted Token: " + token);
+            token = token.substring(7);
 
-            // JWT 토큰 검증
             if (jwtUtil.validateToken(token, jwtUtil.extractUsername(token))) {
-                // 사용자 인증 정보 설정
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(jwtUtil.extractUsername(token), null, null);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 
-        // 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
 }
