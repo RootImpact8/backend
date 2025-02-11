@@ -1,26 +1,21 @@
 spring:
   profiles:
     active: default
-  datasource:
-    url: jdbc:h2:file:./data/mydb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE  # 🔥 파일 모드 사용 (데이터 유지)
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
 
-  h2:
-    console:
-      enabled: true  # 🔥 H2 콘솔 활성화
-      path: /h2-console  # 🔥 H2 콘솔 URL 지정
-      settings:
-        web-allow-others: true  # 🔥 다른 클라이언트에서도 접속 허용 (보안 주의)
-        trace: false  # 🔥 SQL 실행 로그 비활성화
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    url: jdbc:mysql://localhost:3306/rootimpack
+    password: mjy51880256!
+
+
   sql:
     init:
-      mode: never  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
+      mode: always  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
       data-locations: classpath:data.sql
   jpa:
 
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
       ddl-auto: update # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
       #transaction:
