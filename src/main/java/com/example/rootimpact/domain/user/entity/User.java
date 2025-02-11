@@ -1,5 +1,6 @@
 package com.example.rootimpact.domain.user.entity;
 
+import com.example.rootimpact.domain.userInfo.entity.UserInfo;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,9 +22,10 @@ public class User {
 
     private String email;
     private String password;
-    private String name;
+    //private String name;
     //private String region; // 지역 정보 추가
 
     private LocalDate registerDate;
-
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private UserInfo userInfo;
 }
