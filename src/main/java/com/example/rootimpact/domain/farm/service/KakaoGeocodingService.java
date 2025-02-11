@@ -13,7 +13,7 @@ import java.util.Map;
 @Service
 public class KakaoGeocodingService {
 
-    private static final String KAKAO_API_KEY ="";//"f67936837301f598045cf8bb51986262"; // ✅ 본인의 Kakao API 키 사용
+    private static final String KAKAO_API_KEY ="f67936837301f598045cf8bb51986262"; // ✅ 본인의 Kakao API 키 사용
 
     public Map<String, Double> getCoordinates(String address) {
 

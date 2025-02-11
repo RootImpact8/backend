@@ -46,7 +46,7 @@ public class SecurityConfig {
                         // ✅ 로그인, 회원가입, 가격 조회 API는 인증 없이 허용
                         .requestMatchers(
                                 "/login", "/register",
-                                "/api/user/register", "/api/user/login",
+                                "/api/user/register", "/api/user/login","/api/dairy/**",
                                 "/api/farm/price"
                         ).permitAll()
                         // ✅ 그 외 모든 요청은 인증 필요
