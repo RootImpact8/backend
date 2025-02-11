@@ -1,12 +1,15 @@
 
+
 spring:
   profiles:
     active: default
+  server:
+    port: 8081
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    url: jdbc:mysql://localhost:3306/rootimpack
+    username: admin
+    url: jdbc:mysql://rootimpact8.cpuyiuu4iuwi.ap-northeast-2.rds.amazonaws.com/rootimpact
     password: mjy51880256!
 
 
@@ -20,7 +23,7 @@ spring:
     hibernate:
       ddl-auto: update # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
         #transaction:
-        # jta:
+      # jta:
       #  platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
     defer-datasource-initialization: true  # ✅ data.sql을 실행하기 위해 필요
     show-sql: true
