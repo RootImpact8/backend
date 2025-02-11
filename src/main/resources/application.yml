@@ -2,13 +2,11 @@
 spring:
   profiles:
     active: default
-  server:
-    port: 8081
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: admin
-    url: jdbc:mysql://rootimpact8.cpuyiuu4iuwi.ap-northeast-2.rds.amazonaws.com/rootimpact
+    username: root
+    url: jdbc:mysql://localhost:3306/rootimpack
     password: mjy51880256!
 
 

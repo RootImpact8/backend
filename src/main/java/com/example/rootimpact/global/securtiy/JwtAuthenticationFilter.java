@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // ✅ Swagger 및 인증이 필요 없는 경로는 필터링 제외
         if (uri.startsWith("/swagger-ui") || uri.startsWith("/v3/api-docs") ||
                 uri.startsWith("/swagger-resources") || uri.startsWith("/webjars") ||
-                uri.equals("/login") || uri.equals("/register") ||
+                uri.equals("/login") || uri.equals("/register") || uri.startsWith("/api/diary/**") ||
                 uri.startsWith("/api/user/register") || uri.startsWith("/api/user/login")) {
             filterChain.doFilter(request, response);
             return;
