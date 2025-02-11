@@ -11,7 +11,7 @@ spring:
 
   sql:
     init:
-      mode: always  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
+      mode: never  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
       data-locations: classpath:data.sql
   jpa:
 
