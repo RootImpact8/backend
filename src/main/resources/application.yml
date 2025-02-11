@@ -2,7 +2,7 @@ spring:
   profiles:
     active: default
   datasource:
-    url: jdbc:h2:file:./data/mydb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
+    url: jdbc:h2:file:./data/mydb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE  # 🔥 파일 모드 사용 (데이터 유지)
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -16,13 +16,13 @@ spring:
         trace: false  # 🔥 SQL 실행 로그 비활성화
   sql:
     init:
-      mode: always  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
+      mode: never #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
       data-locations: classpath:data.sql
 
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
+      ddl-auto: update # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
       #transaction:
        # jta:
         #  platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
