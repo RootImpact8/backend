@@ -3,6 +3,8 @@ package com.example.rootimpact.domain.diary.dto;
 import com.example.rootimpact.domain.diary.entity.FarmDiary;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,6 +34,9 @@ public class FarmDiaryResponse {
     @Schema(description = "일기 내용", example = "물주기를 했습니다.")
     private String content;
 
+    @Schema(description = "업로드할 이미지 파일들")
+    private List<DiaryImageDto> images;
+
     // 엔티티를 DTO로 변환하는 생성자
     public FarmDiaryResponse(FarmDiary farmDiary) {
         this.id = farmDiary.getId();
@@ -41,5 +46,8 @@ public class FarmDiaryResponse {
         this.taskName = farmDiary.getTask().getName();
         this.taskCategory = farmDiary.getTask().getCategory();
         this.content = farmDiary.getContent();
+        this.images = farmDiary.getImages().stream()
+                              .map(DiaryImageDto::new)
+                              .collect(Collectors.toList());
     }
 }
