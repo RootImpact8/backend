@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public enum CropType {
     STRAWBERRY("딸기", new CropInfo("200", "226", "00")),
-    RICE("벼", new CropInfo("100", "111", "01")),
+    RICE("벼", new CropInfo("100", "111", "01", "쌀")),
     POTATO("감자", new CropInfo("100", "152", "01")),
     LETTUCE("상추", new CropInfo("200", "214", "01")),
     APPLE("사과", new CropInfo("400", "411", "05")),

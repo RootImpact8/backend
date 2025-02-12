@@ -2,16 +2,17 @@ package com.example.rootimpact.domain.farm.service;
 
 import com.example.rootimpact.domain.farm.dto.CropInfo;
 import com.example.rootimpact.domain.farm.dto.KamisPriceResponse;
+import com.example.rootimpact.domain.farm.dto.PriceData;
 import com.example.rootimpact.domain.farm.type.CropType;
 import com.example.rootimpact.domain.farm.util.DateUtils;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -133,85 +134,51 @@ public class KamisPriceService {
             }
 
             JsonNode items = rootNode.get("data").get("item");
-            Map<String, Double> pricesByDate = new HashMap<>();
+            List<PriceData> priceList = new ArrayList<>();
 
-            // 지역별 가격 정보 수집
+            // 가격 정보 수집
             for (JsonNode item : items) {
-                try {
+                if (item.has("countyname") && "서울".equals(item.get("countyname").asText())) {
+                    try {
+                        // 필수 필드가 모두 있는지 확인
+                        if (item.has("regday") && item.has("price") && item.has("yyyy")) {
+                            String yyyy = item.get("yyyy").asText();
+                            String regday = yyyy + "-" + item.get("regday").asText().replace("/", "-");
+                            String priceStr = item.get("price").asText("0");
 
-                    // 필수 필드가 모두 있는지 확인
-                    if (item.has("regday") && item.has("price") && item.has("yyyy")) {
-                        String yyyy = item.get("yyyy").asText();
-                        String regday = yyyy + "-" + item.get("regday").asText().replace("/", "-");
-                        String priceStr = item.get("price").asText("0");
-
-                        // 가격 문자열 정제 및 변환
-                        try {
-                            double price = Double.parseDouble(priceStr.replaceAll("[^0-9.]", ""));
-                            pricesByDate.put(regday, price);
-                        } catch (NumberFormatException e) {
-                            log.warn("가격 변환 실패 - 품목: {}, 가격: {}", cropName, priceStr);
+                            // 가격 문자열 정제 및 변환
+                            try {
+                                int price = Integer.parseInt(priceStr.replaceAll("[^0-9]", ""));
+                                priceList.add(new PriceData(regday, price));
+                            } catch (NumberFormatException e) {
+                                log.warn("가격 변환 실패 - 품목: {}, 가격: {}", cropName, priceStr);
+                            }
                         }
+                    } catch (Exception e) {
+                        log.warn("데이터 처리 중 오류 발생: {}", e.getMessage());
                     }
-                } catch (Exception e) {
-                    log.warn("데이터 처리 중 오류 발생: {}", e.getMessage());
                 }
             }
 
-            if (pricesByDate.isEmpty()) {
+            if (priceList.isEmpty()) {
                 return createEmptyResponse(cropName);
             }
 
-            return KamisPriceResponse.builder()
-                           .itemName(cropName)
-                           .previousDate(DateUtils.getPreviousDateStr())
-                           .currentDate(DateUtils.getCurrentDateStr())
-                           .previousPrice(pricesByDate.get(DateUtils.getPreviousDateStr()))
-                           .currentPrice(pricesByDate.get(DateUtils.getCurrentDateStr()))
-                           .changeRate(calculateChangeRate(pricesByDate.get(DateUtils.getPreviousDateStr()), pricesByDate.get(DateUtils.getCurrentDateStr())))
-                           .priceStatus(calculatePriceStatus(pricesByDate.get(DateUtils.getPreviousDateStr()), pricesByDate.get(DateUtils.getCurrentDateStr())))
-                           .build();
+            // 날짜순으로 정렬
+            priceList.sort(Comparator.comparing(PriceData::getDate));
+
+            return new KamisPriceResponse(cropName, priceList);
 
         } catch (Exception e) {
             log.error("응답 처리 실패: {}", e.getMessage());
             throw new RuntimeException("응답 처리 실패: " + e.getMessage());
         }
-
-        }
+    }
 
     // 데이터가 없는 경우 -> 빈 응답 생성
     private KamisPriceResponse createEmptyResponse(String cropName) {
-        return KamisPriceResponse.builder()
-                       .itemName(cropName)
-                       .previousDate(DateUtils.getPreviousDateStr())
-                       .currentDate(DateUtils.getCurrentDateStr())
-                       .previousPrice(null)
-                       .currentPrice(null)
-                       .changeRate(null)
-                       .priceStatus("-")
-                       .build();
+        return new KamisPriceResponse(cropName, new ArrayList<>());
     }
 
-    // 가격 변동률 계산
-    private Double calculateChangeRate(Double previousPrice, Double currentPrice) {
-        if (previousPrice == null || currentPrice == null || previousPrice == 0) {
-            return null;
-        }
-        return Math.round(((currentPrice - previousPrice) / previousPrice * 100) * 100.0) / 100.0;
-    }
-
-    // 가격 변동 상태 계산
-    private String calculatePriceStatus(Double previousPrice, Double currentPrice) {
-        if (previousPrice == null || currentPrice == null) {
-            return "-";
-        }
-        double changeRate = calculateChangeRate(previousPrice, currentPrice);
-        if (changeRate > 0) {
-            return "상승";
-        } else if (changeRate < 0) {
-            return "하락";
-        }
-        return "동일";
-    }
 
 }
