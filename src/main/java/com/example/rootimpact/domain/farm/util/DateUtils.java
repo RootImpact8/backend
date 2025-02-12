@@ -22,7 +22,7 @@ public class DateUtils {
 
     // 이전 기준일 반환 (현재 기준일 - 1)
     public static LocalDate getPreviousDate() {
-        return getCurrentDate().minusDays(1);
+        return getCurrentDate().minusMonths(1);
     }
 
     // 현재 기준일 -> 문자열(yyyy-MM-dd)
