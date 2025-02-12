@@ -18,11 +18,7 @@ import com.example.rootimpact.global.config.FileConfig;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -257,31 +253,75 @@ public class FarmDiaryService {
                 .map(FarmDiary::getWriteDate)
                 .orElseThrow(() -> new RuntimeException("첫 번째 일기를 찾을 수 없습니다."));
     }
+    // ✅ 작물별 파종(정식) 기준 Task ID 매핑
+    private static final Map<String, List<Long>> SOWING_TASK_IDS = new HashMap<>();
+
+    static {
+        SOWING_TASK_IDS.put("감자", List.of(67L));
+        SOWING_TASK_IDS.put("딸기", List.of(5L));
+        SOWING_TASK_IDS.put("상추", List.of(93L));
+        SOWING_TASK_IDS.put("고추", List.of(145L));
+        SOWING_TASK_IDS.put("사과", List.of(114L));
+        SOWING_TASK_IDS.put("벼", List.of(42L, 43L)); // 정식, 모내기
+    }
+
     /**
-     * ✅ 2️⃣ 특정 작물의 예상 수확일 계산 (AI + 날씨 정보 반영)
+     * ✅ 특정 작물의 전체 영농일기 조회
+     */
+    public List<FarmDiaryResponse> getAllDiaries(Long userId, String cropName) {
+        List<FarmDiary> diaries = farmDiaryRepository.findByUserIdAndUserCrop_CropNameOrderByWriteDateAsc(userId, cropName);
+        return diaries.stream().map(FarmDiaryResponse::new).collect(Collectors.toList());
+    }
+
+    /**
+     * ✅ 파종(정식) 날짜 조회 (전체 일기 중에서 가장 오래된 해당 Task ID 기준)
+     */
+    public LocalDate getFirstSowingDate(Long userId, String cropName) {
+        List<Long> taskIds = SOWING_TASK_IDS.getOrDefault(cropName, List.of());
+        if (taskIds.isEmpty()) {
+            throw new RuntimeException("해당 작물의 파종 기준 작업이 정의되지 않았습니다: " + cropName);
+        }
+
+        List<FarmDiary> diaries = farmDiaryRepository.findAllSowingDiaries(userId, cropName, taskIds);
+
+        // ✅ 로그 추가 (제대로 동작하는지 확인)
+        log.info("🔍 [{}] 작물의 파종 관련 일기 개수: {}", cropName, diaries.size());
+        for (FarmDiary diary : diaries) {
+            log.info("📅 [{}] 날짜: {}, Task ID: {}", cropName, diary.getWriteDate(), diary.getTask().getId());
+        }
+
+        if (diaries.isEmpty()) {
+            throw new RuntimeException("파종(정식) 관련 활동이 기록된 일기가 없습니다.");
+        }
+
+        return diaries.get(0).getWriteDate();
+    }
+
+    /**
+     * ✅ AI를 활용한 예상 수확일 조회
      */
     public String getPredictedHarvestDate(Long userId, String cropName) {
-        // ✅ 1️⃣ 특정 작물의 첫 일기 작성 날짜(파종일) 가져오기
-        LocalDate sowingDate = getFirstDiaryDate(userId, cropName);
+        // ✅ 1️⃣ 작물의 첫 파종(정식) 날짜 가져오기
+        LocalDate sowingDate = getFirstSowingDate(userId, cropName);
 
-        // ✅ 2️⃣ 사용자 위치 기반 날씨 데이터 가져오기
+        // ✅ 2️⃣ 사용자 위치 기반 날씨 정보 가져오기
         WeatherResponse weatherResponse = weatherService.getWeatherByUserId(userId);
 
         // ✅ 3️⃣ AI 프롬프트 생성 및 요청
         String promptTemplate = """
-                당신은 농업 전문가입니다.
-                주어진 작물 {cropName}의 재배 주기를 고려하여 예상 수확일을 계산하세요.
-                현재 위치의 날씨 데이터를 반영하여 기온 및 습도 변동에 따른 영향을 고려하세요.
-                
-                작물: {cropName}
-                파종일: {sowingDate}
-                현재 위치: {location}
-                현재 날씨: {weather}
-                기온: {temperature}°C
-                습도: {humidity}%
-                
-                예상 수확일을 날짜 형식(YYYY-MM-DD)으로 한 줄만 출력하세요.
-                """;
+            당신은 농업 전문가입니다.
+            주어진 작물 {cropName}의 재배 주기를 고려하여 예상 수확일을 계산하세요.
+            현재 위치의 날씨 데이터를 반영하여 기온 및 습도 변동에 따른 영향을 고려하세요.
+
+            작물: {cropName}
+            파종일: {sowingDate}
+            현재 위치: {location}
+            현재 날씨: {weather}
+            기온: {temperature}°C
+            습도: {humidity}%
+
+            예상 수확일을 날짜 형식(YYYY-MM-DD)으로 한 줄만 출력하세요.
+    """;
 
         Map<String, Object> variables = Map.of(
                 "cropName", cropName,
@@ -295,6 +335,7 @@ public class FarmDiaryService {
         // ✅ AI 요청 (예상 수확일 반환)
         return openAiService.getRecommendation(promptTemplate, variables);
     }
+
     // ✅ 특정 작물에 대한 마지막 작성 일기 조회
     @Transactional(readOnly = true)
     public FarmDiaryResponse getLastDiaryEntry(Long userId, String cropName) {

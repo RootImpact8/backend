@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -23,4 +25,15 @@ public interface FarmDiaryRepository extends JpaRepository<FarmDiary, Long> {
     //오름차순 일기 - 영농일기 ai재배활동을위해서
     List<FarmDiary> findByUserIdAndUserCrop_CropNameOrderByWriteDateAsc(Long userId, String cropName);
 
+    // ✅ 특정 작물의 "파종(정식)" 관련 활동을 포함한 일기 전체 조회 (오름차순 정렬)
+    @Query("SELECT d FROM FarmDiary d " +
+            "WHERE d.user.id = :userId " +
+            "AND d.userCrop.cropName = :cropName " +
+            "AND d.task.id IN :taskIds " +
+            "ORDER BY d.writeDate ASC")
+    List<FarmDiary> findAllSowingDiaries(
+            @Param("userId") Long userId,
+            @Param("cropName") String cropName,
+            @Param("taskIds") List<Long> taskIds
+    );
 }
