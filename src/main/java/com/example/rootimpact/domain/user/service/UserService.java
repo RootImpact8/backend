@@ -18,35 +18,44 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;  // ✅ `JwtUtil`을 주입받도록 수정
 
-    public void registerUser(RegisterRquest registerRquest){
+    /**
+     * ✅ 사용자 회원가입
+     */
+    public void registerUser(RegisterRquest registerRquest) {
         Optional<User> existingUser = userRepository.findByEmail(registerRquest.getEmail());
         if (existingUser.isPresent()) {
-            // 중복된 이메일이 있을 경우 예외 처리 (예: 이메일 이미 존재)
             throw new RuntimeException("Email already exists");
         }
+
+        // ✅ 비밀번호 암호화 후 저장
         String encodedPassword = passwordEncoder.encode(registerRquest.getPassword());
         User user = new User();
         user.setEmail(registerRquest.getEmail());
-        //user.setName(registerRquest.getName());
         user.setPassword(encodedPassword);
-        //user.setRegion(registerRquest.getRegion()); // 지역 정보 저장
+        // user.setName(registerRquest.getName()); // 필요 시 활성화
+        // user.setRegion(registerRquest.getRegion()); // 지역 정보 저장
+
         userRepository.save(user);
     }
+
+    /**
+     * ✅ 사용자 로그인 & JWT 토큰 발급
+     */
     public LoginResponse login(LoginRequest loginRequest) {
-        Optional<User> optional = userRepository.findByEmail(loginRequest.getEmail());
-        if (optional.isEmpty()) {
-            throw new UserNotFoundException("User not found");
-        }
-        User user =optional.get();
-        // 비밀번호 비교
+        // ✅ 이메일로 사용자 조회
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        // ✅ 비밀번호 검증
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
-        // 로그인 성공 시, JWT 토큰 생성
 
-        String token = JwtUtil.generateToken(user.getEmail());// JWT 토큰을 생성하는 유틸리티 사용
+        // ✅ JWT 토큰 생성 (jwtUtil을 인스턴스로 사용)
+        String token = jwtUtil.generateToken(user.getEmail());
 
-        return new LoginResponse(user.getEmail(), token,"로그인성공 및 토큰발급");
+        return new LoginResponse(user.getEmail(), token, "로그인 성공 및 토큰 발급");
     }
 }
