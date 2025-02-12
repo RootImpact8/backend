@@ -171,16 +171,16 @@ public class UserInfoController {
             description = "인증된 사용자가 선택한 특정 재배 작물을 조회합니다.")
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/crops/cultivated/{cropName}")
+    @GetMapping("/crops/cultivated/{cropId}")
     public ResponseEntity<UserCrop> getSpecificCultivatedCrop(
             @Parameter(description = "조회할 재배 작물명", required = true, example = "Tomato")
-            @PathVariable("cropName") String cropName,
+            @PathVariable("cropId") Long cropId,
             @Parameter(hidden = true) Authentication authentication) {
         String userEmail = authentication.getName();
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserCrop crop = userInfoService.getSpecificCultivatedCrop(user.getId(), cropName);
+        UserCrop crop = userInfoService.getSpecificCultivatedCrop(user.getId(), cropId);
         return ResponseEntity.ok(crop);
     }
 
@@ -188,16 +188,16 @@ public class UserInfoController {
             description = "인증된 사용자가 선택한 특정 관심 작물을 조회합니다.")
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/crops/interest/{cropName}")
+    @GetMapping("/crops/interest/{cropId}")
     public ResponseEntity<UserCrop> getSpecificInterestCrop(
             @Parameter(description = "조회할 관심 작물명", required = true, example = "Carrot")
-            @PathVariable("cropName") String cropName,
+            @PathVariable("cropId") Long cropId,
             @Parameter(hidden = true) Authentication authentication) {
         String userEmail = authentication.getName();
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserCrop crop = userInfoService.getSpecificInterestCrop(user.getId(), cropName);
+        UserCrop crop = userInfoService.getSpecificInterestCrop(user.getId(), cropId);
         return ResponseEntity.ok(crop);
     }
 }

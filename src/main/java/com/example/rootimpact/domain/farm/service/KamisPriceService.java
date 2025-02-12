@@ -43,22 +43,22 @@ public class KamisPriceService {
 
         // 각 작물별 가격 정보 조회 -> 리스트로 변환
         return cultivatedCrops.stream()
-                       .map(userCrop -> {
-                           try {
-                               // 작물의 가격 정보 조회
-                               return getPriceInfo(userCrop.getCropName());
-                           } catch (Exception e) {
-                               log.error("작물 {} 가격 조회 실패: {}", userCrop.getCropName(), e.getMessage());
-                               // 에러 발생 시 해당 작물에 대한 빈 응답 반환
-                               return createEmptyResponse(userCrop.getCropName());
-                           }
-                       })
-                       .collect(Collectors.toList());
+                .map(userCrop -> {
+                    try {
+                        // cropId로 가격 정보 조회
+                        return getPriceInfo(userCrop.getCropId());
+                    } catch (Exception e) {
+                        log.error("작물 ID {} 가격 조회 실패: {}", userCrop.getCropId(), e.getMessage());
+                        // 에러 발생 시 해당 작물에 대한 빈 응답 반환
+                        return createEmptyResponse(userCrop.getCropId());
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
     // 작물 가격 조회
-    public KamisPriceResponse getPriceInfo(String cropName) {
-        String url = generateKamisApiUrl(cropName);
+    public KamisPriceResponse getPriceInfo(Long cropId) {
+        String url = generateKamisApiUrl(cropId);
         HttpHeaders headers = createHeaders();
         HttpEntity<?> entity = new HttpEntity<>(headers);
 
@@ -71,7 +71,7 @@ public class KamisPriceService {
             );
 
             log.info("Response status: {}", response.getStatusCode());
-            return processResponse(response.getBody(), cropName);
+            return processResponse(response.getBody(), cropId);
         } catch (Exception e) {
             log.error("API 호출 실패: {}", e.getMessage());
             throw new RuntimeException("가격 조회 실패: " + e.getMessage());
@@ -87,32 +87,31 @@ public class KamisPriceService {
     }
 
     // KAMIS API 요청 URL 생성
-    private String generateKamisApiUrl(String cropName) {
+    private String generateKamisApiUrl(Long cropId) {
 
-        CropInfo cropInfo = CropType.getInfoByName(cropName);
+        CropInfo cropInfo = CropType.getInfoById(cropId);
 
         return UriComponentsBuilder.fromPath("/service/price/xml.do")
-                       .scheme("http")
-                       .host("www.kamis.or.kr")
-                       .queryParam("action", "periodProductList")
-                       .queryParam("p_cert_key", CERT_KEY)
-                       .queryParam("p_cert_id", CERT_ID)
-                       .queryParam("p_returntype", "json")
-                       .queryParam("p_startday", DateUtils.getPreviousDate())
-                       .queryParam("p_endday", DateUtils.getCurrentDate())
-                       .queryParam("p_productclscode", "02") // 도매
-                       .queryParam("p_itemcategorycode", cropInfo.getCategoryCode())
-                       .queryParam("p_itemcode", cropInfo.getItemCode())
-                       .queryParam("p_kindcode", cropInfo.getKindCode())
-                       .queryParam("p_productrankcode", "04")
-                       .queryParam("p_countrycode", "1101") // 서울
-                       .queryParam("p_convert_kg_yn", "Y")
-                       .build()
-                       .toUriString();
+                .scheme("http")
+                .host("www.kamis.or.kr")
+                .queryParam("action", "periodProductList")
+                .queryParam("p_cert_key", CERT_KEY)
+                .queryParam("p_cert_id", CERT_ID)
+                .queryParam("p_returntype", "json")
+                .queryParam("p_startday", DateUtils.getPreviousDate())
+                .queryParam("p_endday", DateUtils.getCurrentDate())
+                .queryParam("p_productclscode", "02") // 도매
+                .queryParam("p_itemcategorycode", cropInfo.getCategoryCode())
+                .queryParam("p_itemcode", cropInfo.getItemCode())
+                .queryParam("p_kindcode", cropInfo.getKindCode())
+                .queryParam("p_productrankcode", "04")
+                .queryParam("p_countrycode", "1101") // 서울
+                .queryParam("p_convert_kg_yn", "Y")
+                .build()
+                .toUriString();
     }
 
-    // API 응답 처리 -> 가격 정보로 변환
-    private KamisPriceResponse processResponse(String responseBody, String cropName) {
+    private KamisPriceResponse processResponse(String responseBody, Long cropId) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(responseBody);
@@ -121,37 +120,38 @@ public class KamisPriceService {
 
             // data 노드가 배열이고 "001"이 포함된 경우 오류로 처리
             if (rootNode.has("data") && rootNode.get("data").isArray()
-                        && rootNode.get("data").size() == 1
-                        && "001".equals(rootNode.get("data").get(0).asText())) {
+                    && rootNode.get("data").size() == 1
+                    && "001".equals(rootNode.get("data").get(0).asText())) {
                 log.warn("API 오류 응답 (001): {}", responseBody);
-                return createEmptyResponse(cropName);
+                return createEmptyResponse(cropId);
             }
 
             // data 노드 확인 및 error_code 체크
             if (!rootNode.has("data") || !rootNode.get("data").has("item")) {
                 log.warn("데이터가 없습니다: {}", responseBody);
-                return createEmptyResponse(cropName);
+                return createEmptyResponse(cropId);
             }
 
             JsonNode items = rootNode.get("data").get("item");
             List<PriceData> priceList = new ArrayList<>();
 
+            // cropId로 CropInfo 조회하여 itemName 가져오기
+            String itemName = CropType.getInfoById(cropId).getItemName();
+
             // 가격 정보 수집
             for (JsonNode item : items) {
                 if (item.has("countyname") && "서울".equals(item.get("countyname").asText())) {
                     try {
-                        // 필수 필드가 모두 있는지 확인
                         if (item.has("regday") && item.has("price") && item.has("yyyy")) {
                             String yyyy = item.get("yyyy").asText();
                             String regday = yyyy + "-" + item.get("regday").asText().replace("/", "-");
                             String priceStr = item.get("price").asText("0");
 
-                            // 가격 문자열 정제 및 변환
                             try {
                                 int price = Integer.parseInt(priceStr.replaceAll("[^0-9]", ""));
                                 priceList.add(new PriceData(regday, price));
                             } catch (NumberFormatException e) {
-                                log.warn("가격 변환 실패 - 품목: {}, 가격: {}", cropName, priceStr);
+                                log.warn("가격 변환 실패 - 작물 ID: {}, 가격: {}", cropId, priceStr);
                             }
                         }
                     } catch (Exception e) {
@@ -161,13 +161,11 @@ public class KamisPriceService {
             }
 
             if (priceList.isEmpty()) {
-                return createEmptyResponse(cropName);
+                return createEmptyResponse(cropId);
             }
 
-            // 날짜순으로 정렬
             priceList.sort(Comparator.comparing(PriceData::getDate));
-
-            return new KamisPriceResponse(cropName, priceList);
+            return new KamisPriceResponse(itemName, priceList);
 
         } catch (Exception e) {
             log.error("응답 처리 실패: {}", e.getMessage());
@@ -175,10 +173,12 @@ public class KamisPriceService {
         }
     }
 
-    // 데이터가 없는 경우 -> 빈 응답 생성
-    private KamisPriceResponse createEmptyResponse(String cropName) {
-        return new KamisPriceResponse(cropName, new ArrayList<>());
+    private KamisPriceResponse createEmptyResponse(Long cropId) {
+        String itemName = CropType.getInfoById(cropId).getItemName();
+        return new KamisPriceResponse(itemName, new ArrayList<>());
     }
+
+
 
 
 }

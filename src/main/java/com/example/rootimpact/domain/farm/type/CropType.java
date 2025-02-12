@@ -6,27 +6,27 @@ import lombok.Getter;
 
 @Getter
 public enum CropType {
-    STRAWBERRY("딸기", new CropInfo("200", "226", "00")),
-    RICE("벼", new CropInfo("100", "111", "01", "쌀")),
-    POTATO("감자", new CropInfo("100", "152", "01")),
-    LETTUCE("상추", new CropInfo("200", "214", "01")),
-    APPLE("사과", new CropInfo("400", "411", "05")),
-    PEPPER("고추", new CropInfo("200", "242", "00"));
+    STRAWBERRY(1L, new CropInfo("200", "226", "00","딸기")),
+    RICE(2L, new CropInfo("100", "111", "01", "쌀")),
+    POTATO(3L, new CropInfo("100", "152", "01","감자")),
+    LETTUCE(4L, new CropInfo("200", "214", "01","상추")),
+    APPLE(5L, new CropInfo("400", "411", "05","사과")),
+    PEPPER(6L, new CropInfo("200", "242", "00","고추"));
 
-    private final String name; // 작물명
+    private final Long id; // 작물명
     private final CropInfo cropInfo; // 작물 코드 정보(부류코드, 품목코드, 품종코드)
 
-    CropType(String name, CropInfo cropInfo) {
-        this.name = name;
+    CropType(Long id, CropInfo cropInfo) {
+        this.id = id;
         this.cropInfo = cropInfo;
     }
 
-    // 작물명으로 해당 작물의 코드 정보를 조회
-    public static CropInfo getInfoByName(String cropName) {
+    public static CropInfo getInfoById(Long id) {
         return Arrays.stream(values())
-                       .filter(crop -> crop.getName().equals(cropName))
-                       .findFirst()
-                       .map(CropType::getCropInfo)
-                       .orElseThrow(() -> new RuntimeException("지원하지 않는 작물입니다: " + cropName));
+                .filter(crop -> crop.getId().equals(id))
+                .findFirst()
+                .map(CropType::getCropInfo)
+                .orElseThrow(() -> new RuntimeException("Invalid crop id: " + id));
     }
+
 }

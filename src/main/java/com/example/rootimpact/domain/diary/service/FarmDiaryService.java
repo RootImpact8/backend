@@ -50,8 +50,8 @@ public class FarmDiaryService {
     }
 
     // 선택된 작물의 작업 목록 조회
-    public List<TaskReponseDto> getTaskTypes(String cropName) {
-        return taskRepository.findByCropName(cropName)
+    public List<TaskReponseDto> getTaskTypes(Long cropId) {
+        return taskRepository.findByCropId(cropId)
                 .stream()
                 .map(TaskReponseDto::new)
                 .collect(Collectors.toList());
@@ -232,10 +232,10 @@ public class FarmDiaryService {
                 .collect(Collectors.toList());
     }
 
-    // 작물별 일기 조회
-    public List<FarmDiaryResponse> findByCropName(String cropName) {
-        List<FarmDiary> diaries = farmDiaryRepository.findByUserCrop_CropName(cropName);
-        return diaries.stream().map(FarmDiaryResponse::new)
+    public List<FarmDiaryResponse> findByCropId(Long cropId) {
+        List<FarmDiary> diaries = farmDiaryRepository.findByUserCrop_CropId(cropId);
+        return diaries.stream()
+                .map(FarmDiaryResponse::new)
                 .collect(Collectors.toList());
     }
 
@@ -248,46 +248,36 @@ public class FarmDiaryService {
     /**
      * ✅ 1️⃣ 특정 작물의 첫 번째 일기 작성 날짜(파종일) 조회
      */
-    public LocalDate getFirstDiaryDate(Long userId, String cropName) {
-        return farmDiaryRepository.findTopByUserIdAndUserCrop_CropNameOrderByWriteDateAsc(userId, cropName)
+    public LocalDate getFirstDiaryDate(Long userId, Long cropId) {
+        return farmDiaryRepository.findTopByUserIdAndUserCrop_CropIdOrderByWriteDateAsc(userId, cropId)
                 .map(FarmDiary::getWriteDate)
                 .orElseThrow(() -> new RuntimeException("첫 번째 일기를 찾을 수 없습니다."));
     }
-    // ✅ 작물별 파종(정식) 기준 Task ID 매핑
-    private static final Map<String, List<Long>> SOWING_TASK_IDS = new HashMap<>();
+    private static final Map<Long, List<Long>> SOWING_TASK_IDS = new HashMap<>();
 
     static {
-        SOWING_TASK_IDS.put("감자", List.of(67L));
-        SOWING_TASK_IDS.put("딸기", List.of(5L));
-        SOWING_TASK_IDS.put("상추", List.of(93L));
-        SOWING_TASK_IDS.put("고추", List.of(145L));
-        SOWING_TASK_IDS.put("사과", List.of(114L));
-        SOWING_TASK_IDS.put("벼", List.of(42L, 43L)); // 정식, 모내기
-    }
-
-    /**
-     * ✅ 특정 작물의 전체 영농일기 조회
-     */
-    public List<FarmDiaryResponse> getAllDiaries(Long userId, String cropName) {
-        List<FarmDiary> diaries = farmDiaryRepository.findByUserIdAndUserCrop_CropNameOrderByWriteDateAsc(userId, cropName);
-        return diaries.stream().map(FarmDiaryResponse::new).collect(Collectors.toList());
+        SOWING_TASK_IDS.put(3L, List.of(67L));  // 감자
+        SOWING_TASK_IDS.put(1L, List.of(5L));   // 딸기
+        SOWING_TASK_IDS.put(4L, List.of(93L));  // 상추
+        SOWING_TASK_IDS.put(6L, List.of(145L)); // 고추
+        SOWING_TASK_IDS.put(5L, List.of(114L)); // 사과
+        SOWING_TASK_IDS.put(2L, List.of(42L, 43L)); // 벼 (정식, 모내기)
     }
 
     /**
      * ✅ 파종(정식) 날짜 조회 (전체 일기 중에서 가장 오래된 해당 Task ID 기준)
      */
-    public LocalDate getFirstSowingDate(Long userId, String cropName) {
-        List<Long> taskIds = SOWING_TASK_IDS.getOrDefault(cropName, List.of());
+    public LocalDate getFirstSowingDate(Long userId, Long cropId) {
+        List<Long> taskIds = SOWING_TASK_IDS.getOrDefault(cropId, List.of());
         if (taskIds.isEmpty()) {
-            throw new RuntimeException("해당 작물의 파종 기준 작업이 정의되지 않았습니다: " + cropName);
+            throw new RuntimeException("해당 작물의 파종 기준 작업이 정의되지 않았습니다: " + cropId);
         }
 
-        List<FarmDiary> diaries = farmDiaryRepository.findAllSowingDiaries(userId, cropName, taskIds);
+        List<FarmDiary> diaries = farmDiaryRepository.findAllSowingDiaries(userId, cropId, taskIds);
 
-        // ✅ 로그 추가 (제대로 동작하는지 확인)
-        log.info("🔍 [{}] 작물의 파종 관련 일기 개수: {}", cropName, diaries.size());
+        log.info("🔍 [{}] 작물의 파종 관련 일기 개수: {}", cropId, diaries.size());
         for (FarmDiary diary : diaries) {
-            log.info("📅 [{}] 날짜: {}, Task ID: {}", cropName, diary.getWriteDate(), diary.getTask().getId());
+            log.info("📅 [{}] 날짜: {}, Task ID: {}", cropId, diary.getWriteDate(), diary.getTask().getId());
         }
 
         if (diaries.isEmpty()) {
@@ -300,31 +290,30 @@ public class FarmDiaryService {
     /**
      * ✅ AI를 활용한 예상 수확일 조회
      */
-    public String getPredictedHarvestDate(Long userId, String cropName) {
-        // ✅ 1️⃣ 작물의 첫 파종(정식) 날짜 가져오기
-        LocalDate sowingDate = getFirstSowingDate(userId, cropName);
-
-        // ✅ 2️⃣ 사용자 위치 기반 날씨 정보 가져오기
+    public String getPredictedHarvestDate(Long userId, Long cropId) {
+        LocalDate sowingDate = getFirstSowingDate(userId, cropId);
         WeatherResponse weatherResponse = weatherService.getWeatherByUserId(userId);
 
-        // ✅ 3️⃣ AI 프롬프트 생성 및 요청
         String promptTemplate = """
-            당신은 농업 전문가입니다.
-            주어진 작물 {cropName}의 재배 주기를 고려하여 예상 수확일을 계산하세요.
-            현재 위치의 날씨 데이터를 반영하여 기온 및 습도 변동에 따른 영향을 고려하세요.
+        당신은 농업 전문가입니다.
+        주어진 작물 {cropName}의 재배 주기를 고려하여 예상 수확일을 계산하세요.
+        현재 위치의 날씨 데이터를 반영하여 기온 및 습도 변동에 따른 영향을 고려하세요.
 
-            작물: {cropName}
-            파종일: {sowingDate}
-            현재 위치: {location}
-            현재 날씨: {weather}
-            기온: {temperature}°C
-            습도: {humidity}%
+        작물: {cropName}
+        파종일: {sowingDate}
+        현재 위치: {location}
+        현재 날씨: {weather}
+        기온: {temperature}°C
+        습도: {humidity}%
 
-            예상 수확일을 날짜 형식(YYYY-MM-DD)으로 한 줄만 출력하세요.
+        예상 수확일을 날짜 형식(YYYY-MM-DD)으로 한 줄만 출력하세요.
     """;
 
+        UserCrop userCrop = userCropRepository.findByUserIdAndCropId(userId, cropId)
+                .orElseThrow(() -> new RuntimeException("작물을 찾을 수 없습니다"));
+
         Map<String, Object> variables = Map.of(
-                "cropName", cropName,
+                "cropName", userCrop.getCropName(),
                 "sowingDate", sowingDate.toString(),
                 "location", weatherResponse.getLocation().getName(),
                 "weather", weatherResponse.getCurrent().getCondition().getText(),
@@ -332,14 +321,14 @@ public class FarmDiaryService {
                 "humidity", weatherResponse.getCurrent().getHumidity()
         );
 
-        // ✅ AI 요청 (예상 수확일 반환)
         return openAiService.getRecommendation(promptTemplate, variables);
     }
 
-    // ✅ 특정 작물에 대한 마지막 작성 일기 조회
+
     @Transactional(readOnly = true)
-    public FarmDiaryResponse getLastDiaryEntry(Long userId, String cropName) {
-        Optional<FarmDiary> lastDiary = farmDiaryRepository.findTopByUserIdAndUserCrop_CropNameOrderByWriteDateDesc(userId, cropName);
+    public FarmDiaryResponse getLastDiaryEntry(Long userId, Long cropId) {
+        Optional<FarmDiary> lastDiary = farmDiaryRepository
+                .findTopByUserIdAndUserCrop_CropIdOrderByWriteDateDesc(userId, cropId);
 
         return lastDiary.map(FarmDiaryResponse::new)
                 .orElseThrow(() -> new RuntimeException("해당 작물에 대한 작성된 영농일기가 없습니다."));

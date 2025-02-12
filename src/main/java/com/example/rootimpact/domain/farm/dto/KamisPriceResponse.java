@@ -13,7 +13,7 @@ import lombok.Getter;
 public class KamisPriceResponse {
 
     @Schema(description = "작물명", example = "감자")
-    private String itemName;
+    private String cropName;
 
     @Schema(description = "날짜별 가격 정보 리스트")
     private List<PriceData> priceData;

@@ -4,6 +4,8 @@ package com.example.rootimpact.domain.userInfo.repository;
 import com.example.rootimpact.domain.user.entity.User;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserCropRepository extends JpaRepository<UserCrop, Long> {
@@ -36,5 +38,7 @@ public interface UserCropRepository extends JpaRepository<UserCrop, Long> {
                 .filter(UserCrop::isInterestCrop)
                 .toList();
     }
+    Optional<UserCrop> findById(Long id);
+    Optional<UserCrop> findByUserIdAndCropId(Long userId, Long cropId);
 
 }

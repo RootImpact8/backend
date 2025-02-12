@@ -46,16 +46,12 @@ public class FarmDiaryController {
         return ResponseEntity.ok(uploadedImages);
     }
 
-
-
-
-
     @Operation(summary = "작업 유형 조회", description = "특정 작물에 대한 작업 유형 목록을 조회합니다.")
-    @GetMapping("/tasks/{cropName}")
+    @GetMapping("/tasks/{cropId}")
     public ResponseEntity<List<TaskReponseDto>> getTasksByCrop(
-            @Parameter(description = "조회할 작물명", required = true)
-            @PathVariable("cropName") String cropName) {
-        return ResponseEntity.ok(farmDiaryService.getTaskTypes(cropName));
+            @Parameter(description = "조회할 작물번호", required = true)
+            @PathVariable("cropId") Long cropId) {
+        return ResponseEntity.ok(farmDiaryService.getTaskTypes(cropId));
     }
 
     @Operation(summary = "사용자별 재배 작물 조회", description = "현재 인증된 사용자의 재배 작물 목록을 조회합니다.")
@@ -117,11 +113,11 @@ public class FarmDiaryController {
     }
 
     @Operation(summary = "작물별 일기 조회", description = "특정 작물의 일기 목록을 조회합니다.")
-    @GetMapping("/crops/{cropName}")
-    public ResponseEntity<List<FarmDiaryResponse>> findByCropName(
+    @GetMapping("/crops/{cropId}")
+    public ResponseEntity<List<FarmDiaryResponse>> findByCropId(
             @Parameter(description = "조회할 작물명", required = true)
-            @PathVariable("cropName") String cropName) {
-        return ResponseEntity.ok(farmDiaryService.findByCropName(cropName));
+            @PathVariable("cropId") Long cropId) {
+        return ResponseEntity.ok(farmDiaryService.findByCropId(cropId));
     }
 
     @Operation(summary = "일기 삭제", description = "ID에 해당하는 일기를 삭제합니다.")
@@ -137,10 +133,10 @@ public class FarmDiaryController {
     @GetMapping("/first-diary-date")
     public ResponseEntity<LocalDate> getFirstDiaryDate(
             @Parameter(description = "사용자 ID", required = true)
-            @RequestParam Long userId,
-            @Parameter(description = "작물명", required = true)
-            @RequestParam String cropName) {
-        LocalDate firstDiaryDate = farmDiaryService.getFirstDiaryDate(userId, cropName);
+            @RequestParam(name = "userId") Long userId,
+            @Parameter(description = "작물번호", required = true)
+            @RequestParam(name = "cropId") Long cropId) {
+        LocalDate firstDiaryDate = farmDiaryService.getFirstDiaryDate(userId, cropId);
         return ResponseEntity.ok(firstDiaryDate);
     }
 
@@ -148,10 +144,10 @@ public class FarmDiaryController {
     @GetMapping("/ai-harvest-estimate")
     public ResponseEntity<String> getHarvestEstimate(
             @Parameter(description = "사용자 ID", required = true)
-            @RequestParam Long userId,
-            @Parameter(description = "작물명", required = true)
-            @RequestParam String cropName) {
-        String harvestEstimate = farmDiaryService.getPredictedHarvestDate(userId, cropName);
+            @RequestParam(name = "userId") Long userId,
+            @Parameter(description = "작물번호", required = true)
+            @RequestParam(name = "cropId") Long cropId) {
+        String harvestEstimate = farmDiaryService.getPredictedHarvestDate(userId, cropId);
         return ResponseEntity.ok(harvestEstimate);
     }
 
@@ -159,10 +155,10 @@ public class FarmDiaryController {
     @GetMapping("/last-diary")
     public ResponseEntity<FarmDiaryResponse> getLastDiaryEntry(
             @Parameter(description = "사용자 ID", required = true)
-            @RequestParam Long userId,
-            @Parameter(description = "작물명", required = true)
-            @RequestParam String cropName) {
-        FarmDiaryResponse lastDiary = farmDiaryService.getLastDiaryEntry(userId, cropName);
+            @RequestParam(name = "userId") Long userId,
+            @Parameter(description = "작물 ID", required = true)
+            @RequestParam(name = "cropId") Long cropId) {
+        FarmDiaryResponse lastDiary = farmDiaryService.getLastDiaryEntry(userId, cropId);
         return ResponseEntity.ok(lastDiary);
     }
 }

@@ -9,20 +9,22 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "user_crop")  // ✅ 소문자로 테이블명 설정
+@Table(name = "user_crop")
 public class UserCrop {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonIgnore
-    @JoinColumn(name = "user_id", nullable = false)  // ✅ 소문자로 설정
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "crop_name") // ✅ 소문자로 설정
+    @Column(name = "crop_name")
     private String cropName;
 
-    @Column(name = "is_interest_crop") // ✅ 소문자로 설정
+    @Column(name = "crop_id")  // 추가
+    private Long cropId;       // 추가
+
+    @Column(name = "is_interest_crop")
     private boolean isInterestCrop;
 }

@@ -9,23 +9,23 @@ import com.example.rootimpact.domain.farm.service.FarmActivateService;
 import com.example.rootimpact.domain.farm.service.KamisPriceService;
 import com.example.rootimpact.domain.farm.service.WeatherService;
 import com.example.rootimpact.domain.user.entity.User;
+import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.service.UserInfoService;
+import com.example.rootimpact.global.error.ErrorResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.example.rootimpact.global.error.ErrorResponse;
-import java.util.Arrays;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -40,7 +40,8 @@ public class FarmController {
     private final KamisPriceService kamisPriceService;
     private final FarmActivateService farmActivateService;
 
-    @Operation(summary = "유저 전체 작물 가격정보 비교",description = "재배를 실시간 가격정보를 가져와 가격을 전날과비교해서 가격비교 반환")
+    // ✅ 사용자 재배 작물 가격 비교 (작물 ID 기반)
+    @Operation(summary = "유저 전체 작물 가격정보 비교", description = "사용자의 재배 작물에 대한 실시간 가격 정보를 가져와 전날과 비교하여 가격 비교 반환")
     @GetMapping("/user-crops/price")
     public ResponseEntity<List<KamisPriceResponse>> getUserCropsPrice(
             @Parameter(description = "사용자 ID", required = true, example = "1")
@@ -49,36 +50,26 @@ public class FarmController {
         return ResponseEntity.ok(priceResponses);
     }
 
-    @Operation(
-            summary = "AI 기반 재배 추천",
-            description = "사용자 ID와 작물명과 작물일기 데이터 기반으로 AI 추천 결과(작물 재배 일차 등)를 반환합니다."
-    )
+    // ✅ AI 기반 재배 추천 (작물 ID 기반)
+    @Operation(summary = "AI 기반 재배 추천", description = "사용자 ID와 작물 ID 및 작물 일기 데이터를 기반으로 AI 추천 결과(재배 일차 등)를 반환합니다.")
     @GetMapping("/ai-recommendation")
     public ResponseEntity<AiRecommendationResponse> getAiRecommendation(
             @Parameter(description = "사용자 ID", required = true, example = "1")
             @RequestParam Long userId,
-            @Parameter(description = "작물명", required = true, example = "감자")
-            @RequestParam String cropName) {
-        AiRecommendationResponse recommendation = farmActivateService.getAiRecommendation(userId, cropName);
+            @Parameter(description = "작물 ID", required = true, example = "3")
+            @RequestParam Long cropId) {
+        AiRecommendationResponse recommendation = farmActivateService.getAiRecommendation(userId, cropId);
         return ResponseEntity.ok(recommendation);
     }
-    @Operation(summary = "작물 가격정보",description = "유저와상관없이 작물가격정보를 검색하면  가격반환")
+
+    // ✅ 작물 가격 조회 (작물 ID 기반)
+    @Operation(summary = "작물 가격정보", description = "사용자와 상관없이 특정 작물의 가격 정보를 검색하면 가격을 반환합니다.")
     @GetMapping("/price")
     public ResponseEntity<?> getCropPrice(
-            @Parameter(description = "작물명",required = true,example = "감자")
-            @RequestParam(name = "cropName", required = true) String cropName) {
+            @Parameter(description = "작물 ID", required = true, example = "2")
+            @RequestParam(name = "cropId", required = true) Long cropId) {
         try {
-            if (!StringUtils.hasText(cropName)) {
-                return ResponseEntity.badRequest()
-                        .body(new ErrorResponse("작물명은 필수 입력값입니다."));
-            }
-
-            if (!isSupportedCrop(cropName)) {
-                return ResponseEntity.badRequest()
-                        .body(new ErrorResponse("지원하지 않는 작물입니다: " + cropName));
-            }
-
-            KamisPriceResponse response = kamisPriceService.getPriceInfo(cropName);
+            KamisPriceResponse response = kamisPriceService.getPriceInfo(cropId);
 
             if (response.getPriceData() == null) {
                 return ResponseEntity.ok()
@@ -86,7 +77,6 @@ public class FarmController {
             }
 
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             log.error("가격 정보 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -94,14 +84,8 @@ public class FarmController {
         }
     }
 
-    private boolean isSupportedCrop(String cropName) {
-        return Arrays.asList("딸기", "벼", "감자", "상추", "사과", "고추").contains(cropName);
-    }
-
-    @Operation(
-            summary = "날씨 정보 요청",
-            description = "현재 인증된 사용자의 날씨 정보 및 추후 5일까지의 날씨 정보를 반환합니다."
-    )
+    // ✅ 날씨 정보 조회
+    @Operation(summary = "날씨 정보 요청", description = "현재 인증된 사용자의 날씨 정보 및 추후 5일까지의 날씨 정보를 반환합니다.")
     @GetMapping("/weather")
     public ResponseEntity<WeatherResponse> getWeather(
             @Parameter(hidden = true) Authentication authentication) {
@@ -109,21 +93,33 @@ public class FarmController {
         return ResponseEntity.ok(weatherResponse);
     }
 
-    @Operation(
-            summary = "관심 작물 뉴스 조회",
-            description = "관심 작물에 대한 AI 기반 뉴스 및 주요 정보를 반환합니다."
-    )
+    // ✅ 관심 작물 뉴스 조회 (작물 ID 기반)
+    @Operation(summary = "관심 작물 뉴스 조회", description = "관심 작물에 대한 AI 기반 뉴스 및 주요 정보를 반환합니다.")
     @GetMapping("/crop-news")
-    public ResponseEntity<AiNewsResponse> getCropNews(
-            @Parameter(description = "작물명", required = true, example = "감자")
-            @RequestParam String cropName,
+    public ResponseEntity<?> getCropNews(
+            @Parameter(description = "작물 ID", required = true, example = "4")
+            @RequestParam Long cropId,
             @Parameter(hidden = true) Authentication authentication) {
-        String userEmail = authentication.getName();
-        User user = userInfoService.getUserByEmail(userEmail);
+        try {
+            // ✅ 사용자 인증 정보에서 이메일 가져오기
+            String userEmail = authentication.getName();
+            User user = userInfoService.getUserByEmail(userEmail);
 
-        userInfoService.getSpecificInterestCrop(user.getId(), cropName);
+            // ✅ 사용자 관심 작물인지 확인
+            UserCrop userCrop = userInfoService.getSpecificInterestCrop(user.getId(), cropId);
 
-        AiNewsResponse response = aiNewsService.getCropNews(cropName);
-        return ResponseEntity.ok(response);
+            if (userCrop == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ErrorResponse("해당 작물은 관심 작물에 등록되어 있지 않습니다."));
+            }
+
+            // ✅ AI 뉴스 제공
+            AiNewsResponse response = aiNewsService.getCropNews(cropId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("관심 작물 뉴스 조회 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("서버 오류가 발생했습니다."));
+        }
     }
 }

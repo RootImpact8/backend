@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    List<Task> findByCropName(String cropName);
 
+    List<Task> findByCropId(Long cropId);
 
 }
