@@ -1,5 +1,6 @@
 package com.example.rootimpact.domain.diary.dto;
 
+import com.example.rootimpact.domain.diary.entity.TempImageInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -39,19 +40,18 @@ public class FarmDiaryRequest {
     @Schema(description = "일기 내용", example = "Planted new seeds.", required = true)
     private String content;
 
-    @Schema(description = "업로드할 이미지 파일들")
-    private List<MultipartFile> images;
+    @Schema(description = "저장된 이미지 정보 목록")
+    private List<TempImageInfo> savedImages;
 
     @Schema(description = "삭제할 이미지 ID 목록")
     private List<Long> deleteImageIds;
 
-    // 이미지 관련 getter 메서드들
-    public List<MultipartFile> getImages() {
-        return images != null ? images : new ArrayList<>();
+    // getter 메서드들
+    public List<TempImageInfo> getSavedImages() {
+        return savedImages != null ? savedImages : new ArrayList<>();
     }
 
     public List<Long> getDeleteImageIds() {
         return deleteImageIds != null ? deleteImageIds : new ArrayList<>();
     }
-
 }

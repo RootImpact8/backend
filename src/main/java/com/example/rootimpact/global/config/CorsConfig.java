@@ -14,10 +14,10 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("*") // ✅ 모든 출처 허용
+                        .allowedOriginPatterns("*")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .exposedHeaders("Authorization") // ✅ Swagger 요청을 허용하려면 Authorization 헤더를 노출해야 함
+                        .exposedHeaders("Authorization")  // ✅ JWT 토큰 포함 허용
                         .allowCredentials(true);
             }
         };

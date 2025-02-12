@@ -1,9 +1,6 @@
 package com.example.rootimpact.domain.diary.controller;
 
-import com.example.rootimpact.domain.diary.dto.FarmDiaryRequest;
-import com.example.rootimpact.domain.diary.dto.FarmDiaryResponse;
-import com.example.rootimpact.domain.diary.dto.TaskReponseDto;
-import com.example.rootimpact.domain.diary.dto.UserCropResponseDto;
+import com.example.rootimpact.domain.diary.dto.*;
 import com.example.rootimpact.domain.diary.service.FarmDiaryService;
 import com.example.rootimpact.domain.user.entity.User;
 import com.example.rootimpact.domain.user.repository.UserRepository;
@@ -28,6 +25,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -38,6 +36,19 @@ public class FarmDiaryController {
 
     private final FarmDiaryService farmDiaryService;
     private final UserRepository userRepository;
+
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<TempImageResponse>> uploadImages(
+            @RequestParam("images")
+            @Parameter(description = "업로드할 이미지 파일들", required = true)
+            List<MultipartFile> images) {
+        List<TempImageResponse> uploadedImages = farmDiaryService.uploadImages(images);
+        return ResponseEntity.ok(uploadedImages);
+    }
+
+
+
+
 
     @Operation(summary = "작업 유형 조회", description = "특정 작물에 대한 작업 유형 목록을 조회합니다.")
     @GetMapping("/tasks/{cropName}")

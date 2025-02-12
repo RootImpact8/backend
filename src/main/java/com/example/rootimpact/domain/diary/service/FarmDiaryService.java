@@ -1,9 +1,6 @@
 package com.example.rootimpact.domain.diary.service;
 
-import com.example.rootimpact.domain.diary.dto.FarmDiaryRequest;
-import com.example.rootimpact.domain.diary.dto.FarmDiaryResponse;
-import com.example.rootimpact.domain.diary.dto.TaskReponseDto;
-import com.example.rootimpact.domain.diary.dto.UserCropResponseDto;
+import com.example.rootimpact.domain.diary.dto.*;
 import com.example.rootimpact.domain.diary.entity.DiaryImage;
 import com.example.rootimpact.domain.diary.entity.FarmDiary;
 import com.example.rootimpact.domain.diary.entity.Task;
@@ -52,16 +49,60 @@ public class FarmDiaryService {
         List<UserCrop> cultivatedCrops = userInfoService.getCultivatedCrops(userId);
 
         return cultivatedCrops.stream()
-                       .map(UserCropResponseDto::new)
-                       .collect(Collectors.toList());
+                .map(UserCropResponseDto::new)
+                .collect(Collectors.toList());
     }
 
     // 선택된 작물의 작업 목록 조회
     public List<TaskReponseDto> getTaskTypes(String cropName) {
         return taskRepository.findByCropName(cropName)
-                       .stream()
-                       .map(TaskReponseDto::new)
-                       .collect(Collectors.toList());
+                .stream()
+                .map(TaskReponseDto::new)
+                .collect(Collectors.toList());
+    }
+
+    // 여러 이미지 파일 업로드
+    public List<TempImageResponse> uploadImages(List<MultipartFile> images) {
+        List<TempImageResponse> uploadedImages = new ArrayList<>();
+
+        for (MultipartFile image : images) {
+            try {
+                TempImageResponse uploadedImage = saveImage(image);
+                uploadedImages.add(uploadedImage);
+            } catch (IOException e) {
+                log.error("이미지 업로드 실패: {}", e.getMessage());
+                throw new RuntimeException("이미지 업로드에 실패했습니다.", e);
+            }
+        }
+
+        return uploadedImages;
+    }
+
+    // 하나의 이미지 파일 저장
+    private TempImageResponse saveImage(MultipartFile image) throws IOException {
+        // 원본 파일명과 확장자 추출
+        String originalFileName = image.getOriginalFilename();
+        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+
+        // UUID를 사용하여 고유한 파일명 생성
+        String savedFileName = UUID.randomUUID().toString() + fileExtension;
+
+        // FileConfig에 설정된 경로와 파일명을 조합하여 전체 경로 생성
+        String fullPath = fileConfig.getUploadPath() + savedFileName;
+        File dest = new File(fullPath);
+
+        // 저장 디렉토리가 없는 경우 생성
+        dest.getParentFile().mkdirs();
+
+        // MultipartFile을 실제 파일로 저장
+        image.transferTo(dest);
+
+        // 저장된 이미지 정보를 담은 응답 객체 반환
+        return new TempImageResponse(
+                originalFileName,  // 원본 파일명
+                savedFileName,    // 저장된 파일명 (UUID)
+                fullPath         // 전체 파일 경로
+        );
     }
 
     // 일기 생성 메서드
@@ -82,58 +123,37 @@ public class FarmDiaryService {
 
         // 사용자 조회
         User user = userRepository.findById(request.getUserId())
-                            .orElseThrow(()->new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(()->new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         // UserCrop 조회
         UserCrop userCrop = userInfoService.getCultivatedCrops(request.getUserId()).stream()
-                                    .filter(crop -> crop.getCropName().equals(request.getUserCropName()))
-                                    .findFirst()
-                                    .orElseThrow(() -> new IllegalArgumentException("해당 작물을 찾을 수 없습니다."));
+                .filter(crop -> crop.getCropName().equals(request.getUserCropName()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 작물을 찾을 수 없습니다."));
 
         // TaskType 조회
         Task task = taskRepository.findById(request.getTaskId())
-                            .orElseThrow(() -> new IllegalArgumentException("해당 작업을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("해당 작업을 찾을 수 없습니다."));
 
         // 영농일지 생성
         FarmDiary farmDiary = FarmDiary.builder()
-                                      .user(user)
-                                      .writeDate(request.getWriteDate())
-                                      .userCrop(userCrop)
-                                      .task(task)
-                                      .content(request.getContent())
-                                      .build();
+                .user(user)
+                .writeDate(request.getWriteDate())
+                .userCrop(userCrop)
+                .task(task)
+                .content(request.getContent())
+                .build();
 
-        // 새 이미지 추가
-        if(request.getImages() != null && !request.getImages().isEmpty()) {
-            List<DiaryImage> diaryImages = new ArrayList<>();
-
-            for(MultipartFile imageFile : request.getImages()) {
-                try {
-                    String originalFileName = imageFile.getOriginalFilename();
-                    String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-                    String savedFileName = UUID.randomUUID().toString() + fileExtension;
-
-                    // FileConfig를 사용하여 전체 경로 생성
-                    String fullPath = fileConfig.getUploadPath() + savedFileName;
-                    File dest = new File(fullPath);
-
-                    // 디렉토리가 없으면 생성
-                    dest.getParentFile().mkdirs();
-
-                    imageFile.transferTo(dest);
-
-                    DiaryImage diaryImage = DiaryImage.builder()
-                                                    .farmDiary(farmDiary)
-                                                    .originalFileName(originalFileName)
-                                                    .savedFileName(savedFileName)
-                                                    .filePath(fullPath)
-                                                    .build();
-
-                    diaryImages.add(diaryImage);
-                } catch (IOException e) {
-                    throw new RuntimeException("이미지 저장에 실패했습니다.", e);
-                }
-            }
+        // 이미지 정보 추가
+        if(request.getSavedImages() != null && !request.getSavedImages().isEmpty()) {
+            List<DiaryImage> diaryImages = request.getSavedImages().stream()
+                    .map(imageInfo -> DiaryImage.builder()
+                            .farmDiary(farmDiary)
+                            .originalFileName(imageInfo.getOriginalFileName())
+                            .savedFileName(imageInfo.getSavedFileName())
+                            .filePath(imageInfo.getFilePath())
+                            .build())
+                    .collect(Collectors.toList());
 
             farmDiary.setImages(diaryImages);
         }
@@ -154,52 +174,35 @@ public class FarmDiaryService {
         if (!farmDiary.getUser().getId().equals(request.getUserId())) {
             throw new IllegalArgumentException("영농일지 수정 권한이 없습니다.");
         }
-;
+        ;
         // UserCrop 조회
         UserCrop userCrop = userCropRepository.findCultivatedCropsByUser(farmDiary.getUser()).stream()
-                                    .filter(crop -> crop.getCropName().equals(request.getUserCropName()))
-                                    .findFirst()
-                                    .orElseThrow(() -> new IllegalArgumentException("해당 작물을 찾을 수 없습니다."));
+                .filter(crop -> crop.getCropName().equals(request.getUserCropName()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 작물을 찾을 수 없습니다."));
 
         // Task 조회
         Task task = taskRepository.findById(request.getTaskId())
-                                    .orElseThrow(() -> new IllegalArgumentException("해당 작업을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("해당 작업을 찾을 수 없습니다."));
 
         // 기존 이미지 삭제
         if (request.getDeleteImageIds() != null && !request.getDeleteImageIds().isEmpty()) {
             farmDiary.getImages().removeIf(image ->
-                                                   request.getDeleteImageIds().contains(image.getId()));
+                    request.getDeleteImageIds().contains(image.getId()));
         }
 
         // 새 이미지 추가
-        if (request.getImages() != null && !request.getImages().isEmpty()) {
-            for (MultipartFile imageFile : request.getImages()) {
-                try {
-                    String originalFileName = imageFile.getOriginalFilename();
-                    String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-                    String savedFileName = UUID.randomUUID().toString() + fileExtension;
+        if (request.getSavedImages() != null && !request.getSavedImages().isEmpty()) {
+            List<DiaryImage> newImages = request.getSavedImages().stream()
+                    .map(imageInfo -> DiaryImage.builder()
+                            .farmDiary(farmDiary)
+                            .originalFileName(imageInfo.getOriginalFileName())
+                            .savedFileName(imageInfo.getSavedFileName())
+                            .filePath(imageInfo.getFilePath())
+                            .build())
+                    .collect(Collectors.toList());
 
-                    // FileConfig를 사용하여 전체 경로 생성
-                    String fullPath = fileConfig.getUploadPath() + savedFileName;
-                    File dest = new File(fullPath);
-                    // 디렉토리가 없으면 생성
-                    dest.getParentFile().mkdirs();
-
-                    imageFile.transferTo(dest);
-
-                    // 이미지 엔티티 생성 및 추가
-                    DiaryImage diaryImage = DiaryImage.builder()
-                                                    .farmDiary(farmDiary)
-                                                    .originalFileName(originalFileName)
-                                                    .savedFileName(savedFileName)
-                                                    .filePath(fullPath)
-                                                    .build();
-
-                    farmDiary.addImage(diaryImage);
-                } catch (IOException e) {
-                    throw new RuntimeException("이미지 저장에 실패했습니다.", e);
-                }
-            }
+            newImages.forEach(farmDiary::addImage);
         }
 
         // 영농일지 정보 수정
@@ -223,21 +226,21 @@ public class FarmDiaryService {
     public List<FarmDiaryResponse> findByUserId(Long userId) {
         List<FarmDiary> diaries = farmDiaryRepository.findByUserId(userId);
         return diaries.stream().map(FarmDiaryResponse::new)
-                       .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     // 작성일별 일기 조회
     public List<FarmDiaryResponse> findByWriteDate(LocalDate writeDate) {
         List<FarmDiary> diaries = farmDiaryRepository.findByWriteDate(writeDate);
         return diaries.stream().map(FarmDiaryResponse::new)
-                       .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     // 작물별 일기 조회
     public List<FarmDiaryResponse> findByCropName(String cropName) {
         List<FarmDiary> diaries = farmDiaryRepository.findByUserCrop_CropName(cropName);
         return diaries.stream().map(FarmDiaryResponse::new)
-                       .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     // 일기 삭제
