@@ -39,6 +39,7 @@ public class FarmController {
     private final UserInfoService userInfoService;
     private final KamisPriceService kamisPriceService;
     private final FarmActivateService farmActivateService;
+
     @Operation(summary = "유저 전체 작물 가격정보 비교",description = "재배를 실시간 가격정보를 가져와 가격을 전날과비교해서 가격비교 반환")
     @GetMapping("/user-crops/price")
     public ResponseEntity<List<KamisPriceResponse>> getUserCropsPrice(
@@ -79,7 +80,7 @@ public class FarmController {
 
             KamisPriceResponse response = kamisPriceService.getPriceInfo(cropName);
 
-            if (response.getPreviousPrice() == null || response.getCurrentPrice() == null) {
+            if (response.getPriceData() == null) {
                 return ResponseEntity.ok()
                         .body(new ErrorResponse("해당 작물의 가격 정보가 없습니다."));
             }
@@ -94,7 +95,7 @@ public class FarmController {
     }
 
     private boolean isSupportedCrop(String cropName) {
-        return Arrays.asList("딸기", "쌀", "감자", "상추", "사과", "고추").contains(cropName);
+        return Arrays.asList("딸기", "벼", "감자", "상추", "사과", "고추").contains(cropName);
     }
 
     @Operation(
