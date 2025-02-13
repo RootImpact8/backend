@@ -18,9 +18,13 @@ public class LoginResponse {
     @Schema(description = "응답 메시지", example = "Login successful")
     private String message;
 
-    public LoginResponse(String email, String token, String message) {
+    @Schema(description = "사용자 고유id" ,example = "user_id")
+    private Long id;
+
+    public LoginResponse(String email, String token, String message,Long id) {
         this.email = email;
         this.token = token;
         this.message = message;
+        this.id=id;
     }
 }

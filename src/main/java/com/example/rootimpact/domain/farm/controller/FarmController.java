@@ -114,7 +114,7 @@ public class FarmController {
             }
 
             // ✅ AI 뉴스 제공
-            AiNewsResponse response = aiNewsService.getCropNews(cropId);
+            AiNewsResponse response = aiNewsService.getCropNews(user.getId(),cropId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("관심 작물 뉴스 조회 중 오류 발생: {}", e.getMessage(), e);
