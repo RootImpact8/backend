@@ -11,13 +11,13 @@ spring:
 
   sql:
     init:
-      mode: never  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
+      mode: always  #always 이거는 creqte 할때 같이 바꿔주기 !!!!!!!!!!!!!!
       data-locations: classpath:data.sql
   jpa:
 
     database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
-      ddl-auto: update # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
+      ddl-auto: create # 🔥 기존 데이터를 유지하며 테이블 변경 가능하도록 설정
         #transaction:
         # jta:
       #  platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
