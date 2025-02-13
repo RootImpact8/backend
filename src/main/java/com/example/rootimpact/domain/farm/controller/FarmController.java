@@ -73,16 +73,13 @@ public class FarmController {
         return ResponseEntity.ok(priceResponses);
     }
 
-    // AI 기반 재배 추천 (작물 ID 기반)
-    @Operation(summary = "AI 기반 재배 추천", description = "사용자 ID와 작물 ID 및 작물 일기 데이터를 기반으로 AI 추천 결과(재배 일차 등)를 반환합니다.")
+    @Operation(summary = "AI 기반 재배 추천", description = "사용자 ID와 작물 ID 및 작물 일기 데이터를 기반으로 AI 추천 결과를 반환합니다.")
     @GetMapping("/ai-recommendation")
-    public ResponseEntity<AiRecommendationResponse> getAiRecommendation(
-            @Parameter(description = "사용자 ID", required = true, example = "1")
-            @RequestParam(name = "userId") Long userId,
-            @Parameter(description = "작물 ID", required = true, example = "3")
-            @RequestParam(name = "cropId") Long cropId) {
-        AiRecommendationResponse recommendation = farmActivateService.getAiRecommendation(userId, cropId);
-        return ResponseEntity.ok(recommendation);
+    public ResponseEntity<?> getAiRecommendation(
+            @Parameter(description = "사용자 ID", required = true, example = "1") @RequestParam Long userId,
+            @Parameter(description = "작물 ID", required = true, example = "3") @RequestParam Long cropId) {
+
+        return farmActivateService.getAiRecommendation(userId, cropId);
     }
 
     // 작물 가격 조회 (작물 ID 기반)

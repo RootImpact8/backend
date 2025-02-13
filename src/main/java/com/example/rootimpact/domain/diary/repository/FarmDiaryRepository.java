@@ -26,8 +26,13 @@ public interface FarmDiaryRepository extends JpaRepository<FarmDiary, Long> {
     // 특정 사용자의 특정 작물에 대한 "가장 최근 일기" 1개만 조회 (최신순 정렬 후 첫 번째 데이터)
     Optional<FarmDiary> findTopByUserIdAndUserCrop_CropIdOrderByWriteDateDesc(Long userId, Long cropId);
 
-    // 오름차순 일기 - 영농일기 ai재배활동을위해서
-    List<FarmDiary> findByUserIdAndUserCrop_CropIdOrderByWriteDateAsc(Long userId, Long cropId);
+    @Query("SELECT DISTINCT d FROM FarmDiary d " +
+            "LEFT JOIN FETCH d.task " +
+            "WHERE d.userCrop.cropId = :cropId " +
+            "AND d.user.id = :userId " +
+            "ORDER BY d.writeDate ASC")
+    List<FarmDiary> findDiariesWithTask(@Param("userId") Long userId, @Param("cropId") Long cropId);
+
 
     // 특정 작물의 "파종(정식)" 관련 활동을 포함한 일기 전체 조회 (오름차순 정렬)
     @Query("SELECT fd FROM FarmDiary fd " +

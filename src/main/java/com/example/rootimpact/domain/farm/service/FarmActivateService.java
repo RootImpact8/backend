@@ -3,11 +3,14 @@ package com.example.rootimpact.domain.farm.service;
 import com.example.rootimpact.domain.diary.entity.FarmDiary;
 import com.example.rootimpact.domain.diary.repository.FarmDiaryRepository;
 import com.example.rootimpact.domain.farm.dto.AiRecommendationResponse;
+import com.example.rootimpact.domain.farm.dto.ErrorResponse;
 import com.example.rootimpact.domain.farm.dto.WeatherResponse;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.repository.UserCropRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,52 +27,101 @@ public class FarmActivateService {
     private final OpenAiService openAiService;
     private final UserCropRepository userCropRepository;
 
-    public AiRecommendationResponse getAiRecommendation(Long userId, Long cropId) {
-        // UserCrop 조회하여 cropId 확인
-        UserCrop userCrop = userCropRepository.findByUserIdAndCropId(userId, cropId)
-                .orElseThrow(() -> new RuntimeException("작물을 찾을 수 없습니다"));
+    public ResponseEntity<?> getAiRecommendation(Long userId, Long cropId) {
+        try {
+            log.debug("🟢 AI 추천 요청: userId={}, cropId={}", userId, cropId);
 
-        // 1️⃣ 사용자의 영농일기 데이터 조회
-        List<FarmDiary> diaries = farmDiaryRepository.findByUserIdAndUserCrop_CropIdOrderByWriteDateAsc(userId, cropId);
+            UserCrop userCrop = userCropRepository.findFirstByUserIdAndCropId(userId, cropId)
+                    .orElseThrow(() -> new RuntimeException("❌ 작물을 찾을 수 없습니다: userId=" + userId + ", cropId=" + cropId));
+            log.debug("🌱 조회된 UserCrop: {}", userCrop.getCropName());
 
-        // 2️⃣ 영농일기가 없는 경우 기본 응답 반환
-        if (diaries.isEmpty()) {
-            return AiRecommendationResponse.builder()
-                    .cropStage("해당 작물의 재배 기록이 없습니다.")
-                    .summary("현재 해당 작물에 대한 영농일기가 없습니다. 활동을 기록해 주세요!")
-                    .detailedAdvice(null)
-                    .isExtremeWeather(false)
-                    .build();
+            // fetch join을 사용하여 한 번에 데이터를 가져옴
+            List<FarmDiary> diaries = farmDiaryRepository.findDiariesWithTask(userId, cropId);
+
+            if (diaries.isEmpty()) {
+                log.debug("🚨 영농일기가 존재하지 않음. 기본 응답 반환");
+                return ResponseEntity.ok(
+                        AiRecommendationResponse.builder()
+                                .cropStage("해당 작물의 재배 기록이 없습니다.")
+                                .summary("현재 해당 작물에 대한 영농일기가 없습니다. 활동을 기록해 주세요!")
+                                .detailedAdvice(null)
+                                .isExtremeWeather(false)
+                                .build()
+                );
+            }
+
+            // 4️⃣ 날씨 데이터 가져오기
+            WeatherResponse weatherResponse = weatherService.getWeatherByUserId(userId);
+            log.debug("🌦️ 현재 날씨 정보: 지역={}, 기온={}°C, 강수량={}mm",
+                    weatherResponse.getLocation().getName(),
+                    weatherResponse.getCurrent().getTemp_c(),
+                    weatherResponse.getCurrent().getTotalprecip_mm());
+
+            boolean isExtremeWeather = isExtremeWeatherCondition(weatherResponse);
+            long daysPassed = ChronoUnit.DAYS.between(diaries.get(0).getWriteDate(), LocalDate.now());
+
+            log.debug("⏳ 첫 영농일기 작성일: {}, 경과 일수: {}일", diaries.get(0).getWriteDate(), daysPassed);
+            log.debug("⚠️ 이상기후 여부: {}", isExtremeWeather);
+
+            // 5️⃣ 영농일기 데이터 변환
+            StringBuilder diaryDetails = new StringBuilder();
+            for (FarmDiary diary : diaries) {
+                diaryDetails.append(String.format(
+                        "- 날짜: %s, 작업: %s, 내용: %s\n",
+                        diary.getWriteDate(),
+                        diary.getTask().getCategory(),
+                        diary.getContent()
+                ));
+            }
+
+            log.debug("📜 영농일기 요약:\n{}", diaryDetails);
+
+            // 6️⃣ AI 요청 데이터 구성
+            Map<String, Object> variables = Map.of(
+                    "cropName", userCrop.getCropName(),
+                    "daysPassed", daysPassed,
+                    "location", weatherResponse.getLocation().getName(),
+                    "currentWeather", weatherResponse.getCurrent().getCondition().getText(),
+                    "temperature", weatherResponse.getCurrent().getTemp_c(),
+                    "humidity", weatherResponse.getCurrent().getHumidity(),
+                    "totalprecip_mm", weatherResponse.getCurrent().getTotalprecip_mm(),
+                    "diaryDetails", diaryDetails.toString()
+            );
+
+            log.debug("📝 AI 입력 변수: {}", variables);
+
+            // 7️⃣ AI 프롬프트 선택
+            String promptTemplate = isExtremeWeather ? getExtremeWeatherPrompt() : getStandardPrompt();
+            log.debug("📑 선택된 AI 프롬프트: {}", isExtremeWeather ? "이상기후 대응" : "일반 농업 추천");
+
+            // 8️⃣ AI 응답 요청
+            String aiResponse = openAiService.getRecommendation(promptTemplate, variables);
+            log.info("🟢 AI 원본 응답:\n{}", aiResponse);
+
+            // 9️⃣ AI 응답 데이터 파싱
+            String summary = aiResponse.split("\n")[0];
+            String detailedAdvice = aiResponse.substring(aiResponse.indexOf("\n") + 1);
+
+            log.debug("📌 AI 응답 요약: {}", summary);
+
+            return ResponseEntity.ok(
+                    AiRecommendationResponse.builder()
+                            .cropStage(String.format("%s 재배 %d일차", userCrop.getCropName(), daysPassed))
+                            .isExtremeWeather(isExtremeWeather)
+                            .summary(summary)
+                            .detailedAdvice(detailedAdvice)
+                            .build()
+            );
+
+        } catch (Exception e) {
+            log.error("🚨 오류 발생: userId={}, cropId={}\n{}", userId, cropId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("AI 추천 생성 중 오류 발생", e.getMessage()));
         }
-
-        WeatherResponse weatherResponse = weatherService.getWeatherByUserId(userId);
-        boolean isExtremeWeather = isExtremeWeatherCondition(weatherResponse);
-        long daysPassed = ChronoUnit.DAYS.between(diaries.get(0).getWriteDate(), LocalDate.now());
-
-        StringBuilder diaryDetails = new StringBuilder();
-        for (FarmDiary diary : diaries) {
-            diaryDetails.append(String.format(
-                    "- 날짜: %s, 작업: %s, 내용: %s\n",
-                    diary.getWriteDate(),
-                    diary.getTask().getCategory(),
-                    diary.getContent()
-            ));
-        }
-
-        String promptTemplate;
-        Map<String, Object> variables = Map.of(
-                "cropName", userCrop.getCropName(),  // cropId 대신 실제 작물명 사용
-                "daysPassed", daysPassed,
-                "location", weatherResponse.getLocation().getName(),
-                "currentWeather", weatherResponse.getCurrent().getCondition().getText(),
-                "temperature", weatherResponse.getCurrent().getTemp_c(),
-                "humidity", weatherResponse.getCurrent().getHumidity(),
-                "totalprecip_mm", weatherResponse.getCurrent().getTotalprecip_mm(),
-                "diaryDetails", diaryDetails.toString()
-        );
-
-        if (isExtremeWeather) {
-            promptTemplate = """
+    }
+    // 이상기후 발생 시 프롬프트 반환
+    private String getExtremeWeatherPrompt() {
+        return """
                            현재 이상기후가 발생했습니다.
                            - 지역: {location}
                            - 날씨 상태: {currentWeather}
@@ -137,8 +189,11 @@ public class FarmActivateService {
                     
                            출처
             """;
-        } else {
-            promptTemplate = """
+    }
+
+    // 일반적인 날씨 상황에서 프롬프트 반환
+    private String getStandardPrompt() {
+        return """
                           [현재 날씨]
                           - 지역: {location}
                           - 날씨 상태: {currentWeather}
@@ -160,7 +215,7 @@ public class FarmActivateService {
                           특히, 현재까지 진행된 작업(예: 멀칭, 파종, 수확, 웃거름 1차 완료 등)을 반영하여 작업과 관련한 세부 사항을 상세하게 안내해주고, 작업을 수행함에 있어 주의가 필요한 부분을 상세하게 안내해줘.
                           재배 작물에 대한 대응책으로 알려줘.
                           출력은 농업을 처음 시작한 초보 농업인(3040세대), 기술 수용도가 높은 시니어층, 중장년층(5060세대)를 기준으로 이해하기 쉽게 최대한 친절하고 자세하게 설명해주면 좋겠어.
-                    
+                          
                           입력 조건
                           1. 지역
                           2. 날씨 상태
@@ -215,34 +270,27 @@ public class FarmActivateService {
                           출처
                     
             """;
+    }
+    private boolean isExtremeWeatherCondition(WeatherResponse weatherResponse) {
+        if (weatherResponse == null || weatherResponse.getCurrent() == null) {
+            log.error("🚨 weatherResponse 또는 Current 데이터가 NULL입니다. 기본적으로 이상기후가 아닌 것으로 간주합니다.");
+            return false;  // 기본적으로 이상기후가 아니라고 반환
         }
 
-        String aiResponse = openAiService.getRecommendation(promptTemplate, variables);
-        log.info("🟢 AI 원본 응답: {}", aiResponse);
-
-        return isExtremeWeather
-                ? AiRecommendationResponse.builder()
-                .cropStage(String.format("%s 재배 %d일차", userCrop.getCropName(), daysPassed))
-                .isExtremeWeather(true)
-                .climateWarning(aiResponse.split("\n")[0])
-                .climateAdvice(aiResponse.substring(aiResponse.indexOf("\n") + 1))
-                .build()
-                : AiRecommendationResponse.builder()
-                .cropStage(String.format("%s 재배 %d일차", userCrop.getCropName(), daysPassed))
-                .isExtremeWeather(false)
-                .summary(aiResponse.split("\n")[0])
-                .detailedAdvice(aiResponse.substring(aiResponse.indexOf("\n") + 1))
-                .build();
-    }
-
-    // 이상기후인지 아닌지 판단
-    private boolean isExtremeWeatherCondition(WeatherResponse weatherResponse) {
         double temp = weatherResponse.getCurrent().getTemp_c();
         double rain = weatherResponse.getCurrent().getTotalprecip_mm();
-        String condition = weatherResponse.getCurrent().getCondition().getText();
 
-        return temp < -5 || temp > 35 || rain > 50 ||
+        // 날씨 조건이 NULL일 경우 기본값 설정
+        String condition = (weatherResponse.getCurrent().getCondition() != null)
+                ? weatherResponse.getCurrent().getCondition().getText()
+                : "알 수 없음";
+
+        boolean extreme = temp < -5 || temp > 35 || rain > 50 ||
                 condition.contains("폭우") || condition.contains("태풍") ||
                 condition.contains("한파");
+
+        log.debug("🌡️ 이상기후 판단: 온도={}, 강수량={}, 조건={}, 결과={}", temp, rain, condition, extreme);
+
+        return extreme;
     }
 }
