@@ -16,8 +16,12 @@ public class UserCropResponseDto {
     @Schema(description = "작물명", example = "감자")
     private String cropName;
 
+    @Schema(description = "작물 ID", example = "3")
+    private Long cropId;
+
     public UserCropResponseDto(UserCrop userCrop) {
         this.id = userCrop.getId();
         this.cropName = userCrop.getCropName();
+        this.cropId = userCrop.getCropId();
     }
 }

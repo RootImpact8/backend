@@ -305,8 +305,8 @@ public class FarmDiaryService {
         예상 수확일을 날짜 형식(YYYY-MM-DD)으로 한 줄만 출력하세요.
     """;
 
-        UserCrop userCrop = userCropRepository.findByUserIdAndCropId(userId, cropId)
-                .orElseThrow(() -> new RuntimeException("작물을 찾을 수 없습니다"));
+        UserCrop userCrop = userCropRepository.findFirstByUserIdAndCropId(userId, cropId)
+                .orElseThrow(() -> new RuntimeException("❌ 작물을 찾을 수 없습니다: userId=" + userId + ", cropId=" + cropId));
 
         Map<String, Object> variables = Map.of(
                 "cropName", userCrop.getCropName(),
