@@ -34,15 +34,17 @@ public interface FarmDiaryRepository extends JpaRepository<FarmDiary, Long> {
     List<FarmDiary> findDiariesWithTask(@Param("userId") Long userId, @Param("cropId") Long cropId);
 
 
-    // 특정 작물의 "파종(정식)" 관련 활동을 포함한 일기 전체 조회 (오름차순 정렬)
-    @Query("SELECT fd FROM FarmDiary fd " +
-            "WHERE fd.user.id = :userId " +
-            "AND fd.userCrop.cropId = :cropId " +
-            "AND fd.task.id IN :taskIds " +
-            "ORDER BY fd.writeDate ASC")
-    List<FarmDiary> findAllSowingDiaries(
-            @Param("userId") Long userId,
-            @Param("cropId") Long cropId,
-            @Param("taskIds") List<Long> taskIds
-    );
+
+
+
+    // userId, cropId, 그리고 특정 작업 ID 목록에 해당하는 영농일기를 작성일 오름차순으로 조회
+    @Query("SELECT d FROM FarmDiary d JOIN d.userCrop uc " +
+            "WHERE d.user.id = :userId " +
+            "AND uc.cropId = :cropId " +
+            "AND d.task.id IN :taskIds " +
+            "ORDER BY d.writeDate ASC")
+    List<FarmDiary> findAllSowingDiaries(@Param("userId") Long userId,
+                                         @Param("cropId") Long cropId,
+                                         @Param("taskIds") List<Long> taskIds);
+
 }
