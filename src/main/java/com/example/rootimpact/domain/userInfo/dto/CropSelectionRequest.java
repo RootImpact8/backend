@@ -17,6 +17,13 @@ public class CropSelectionRequest {
     @Schema(description = "선택한 재배 작물 리스트", example = "[\"감자\", \"딸기\"]", required = true)
     private List<String> cultivatedCrops;
 
+    @Getter
     @Schema(description = "선택한 관심 작물 리스트", example = "[\"상추\", \"고추\"]")
     private List<String> interestCrops;
+
+    // ✅ 최소 한 개의 리스트가 비어있어도 동작할 수 있도록 유효성 검사 추가
+    public boolean isValid() {
+        return (cultivatedCrops != null && !cultivatedCrops.isEmpty()) ||
+                (interestCrops != null && !interestCrops.isEmpty());
+    }
 }

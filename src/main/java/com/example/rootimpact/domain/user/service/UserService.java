@@ -52,6 +52,6 @@ public class UserService {
         // JWT 토큰 생성 (jwtUtil을 인스턴스로 사용)
         String token = jwtUtil.generateToken(user.getEmail());
 
-        return new LoginResponse(user.getEmail(), token, "로그인 성공 및 토큰 발급");
+        return new LoginResponse(user.getEmail(), token, "로그인 성공 및 토큰 발급",user.getId());
     }
 }

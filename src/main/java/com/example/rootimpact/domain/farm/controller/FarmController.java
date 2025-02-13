@@ -136,8 +136,9 @@ public class FarmController {
                         .body(new ErrorResponse("해당 작물은 관심 작물에 등록되어 있지 않습니다."));
             }
 
-            // AI 뉴스 제공
-            AiNewsResponse response = aiNewsService.getCropNews(cropId);
+            // ✅ AI 뉴스 제공
+            AiNewsResponse response = aiNewsService.getCropNews(user.getId(), cropId);
+          
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("관심 작물 뉴스 조회 중 오류 발생: {}", e.getMessage(), e);
