@@ -36,8 +36,7 @@ public class FarmDiaryRequest {
     @Schema(description = "작업 ID", example = "2", required = true)
     private Long taskId;
 
-    @NotBlank(message = "일기 내용은 필수입니다.")
-    @Schema(description = "일기 내용", example = "Planted new seeds.", required = true)
+    @Schema(description = "일기 내용")
     private String content;
 
     @Schema(description = "저장된 이미지 정보 목록")

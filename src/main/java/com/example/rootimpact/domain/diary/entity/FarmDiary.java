@@ -46,7 +46,7 @@ public class FarmDiary {
     @JoinColumn(name = "task_id")
     Task task;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = true)
     private String content;
 
     @OneToMany(mappedBy = "farmDiary", cascade = CascadeType.ALL, orphanRemoval = true)

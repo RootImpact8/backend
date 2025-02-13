@@ -187,4 +187,18 @@ public class UserInfoController {
         UserCrop crop = userInfoService.getSpecificInterestCrop(user.getId(), cropId);
         return ResponseEntity.ok(crop);
     }
+    @Operation(summary = "사용자 재배 작물/관심 작물 수정", description = "인증된 사용자의 재배 작물 및 관심 작물 정보를 업데이트합니다.")
+    @PreAuthorize("isAuthenticated()")
+    @PutMapping("/user-crops")
+    public ResponseEntity<String> updateUserCrops(
+            @Parameter(description = "사용자 작물 선택 요청 객체", required = true)
+            @RequestBody CropSelectionRequest request,
+            @Parameter(hidden = true) Authentication authentication) {
+
+        String userEmail = authentication.getName();
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return userInfoService.updateUserCrops(user.getId(), request);
+    }
 }
