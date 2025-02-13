@@ -13,13 +13,11 @@ import com.example.rootimpact.domain.userInfo.repository.CropRepository;
 import com.example.rootimpact.domain.userInfo.repository.UserCropRepository;
 import com.example.rootimpact.domain.userInfo.repository.UserInfoRepository;
 import com.example.rootimpact.domain.userInfo.repository.UserLocationRepository;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +28,8 @@ public class UserInfoService {
     private final UserLocationRepository locationRepository; // 사용자 거주지 저장소
     private final UserRepository userRepository; // 사용자 저장소
     private final UserInfoRepository userInfoRepository;
-    // ✅ 사용자 이름 조회
+
+    // 사용자 이름 조회
     public UserInfoResponse getUserName(Long userId) {
         UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new RuntimeException("User info not found"));
@@ -41,7 +40,7 @@ public class UserInfoService {
         return response;
     }
 
-    // ✅ 사용자 이름 저장
+    // 사용자 이름 저장
     @Transactional
     public void saveUserName(Long userId, String name) {
         User user = userRepository.findById(userId)
@@ -54,7 +53,7 @@ public class UserInfoService {
         userInfoRepository.save(userInfo);
     }
 
-    // ✅ 사용자 이름 수정
+    // 사용자 이름 수정
     @Transactional
     public void updateUserName(Long userId, String name) {
         UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
@@ -63,17 +62,13 @@ public class UserInfoService {
         userInfo.setName(name);
         userInfoRepository.save(userInfo);
     }
-    /**
-     * ✅ 기본 제공 작물 리스트 조회
-     * @return List<Crop> 기본 작물 리스트
-     */
+
+    // 기본 제공 작물 리스트 조회
     public List<Crop> getAllCrops() {
         return cropRepository.findAll();
     }
 
-    /**
-     * ✅ 사용자 거주 지역 저장 (기존 데이터 삭제 후 새로운 데이터 저장)
-     */
+    // 사용자 거주 지역 저장 (기존 데이터 삭제 후 새로운 데이터 저장)
     public void saveUserLocation(Long userId, LocationRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -88,11 +83,7 @@ public class UserInfoService {
         locationRepository.save(location);
     }
 
-    /**
-     * ✅ 사용자 거주 지역 조회
-     * @param userId 사용자 ID
-     * @return UserLocation 거주 지역 정보
-     */
+    // 사용자 거주 지역 조회
     public UserLocation getUserLocation(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -102,6 +93,7 @@ public class UserInfoService {
                 .orElseThrow(() -> new RuntimeException("User location not found"));
     }
 
+    // 재배 작물 & 관심 작물 저장
     public void saveUserCrops(Long userId, CropSelectionRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -146,7 +138,7 @@ public class UserInfoService {
     }
 
 
-    // ✅ **재배 작물 전체 조회 (Lazy Loading 문제 해결)**
+    // 재배 작물 전체 조회
     @Transactional(readOnly = true)
     public List<UserCrop> getCultivatedCrops(Long userId) {
         User user = userRepository.findById(userId)
@@ -155,7 +147,7 @@ public class UserInfoService {
         return userCropRepository.findCultivatedCropsByUser(user);
     }
 
-    // ✅ **관심 작물 전체 조회 (Lazy Loading 문제 해결)**
+    // 관심 작물 전체 조회
     @Transactional(readOnly = true)
     public List<UserCrop> getInterestCrops(Long userId) {
         User user = userRepository.findById(userId)
@@ -163,6 +155,8 @@ public class UserInfoService {
 
         return userCropRepository.findInterestCropsByUser(user);
     }
+
+    // 재배 작물 개별 조회
     @Transactional(readOnly = true)
     public UserCrop getSpecificCultivatedCrop(Long userId, Long cropId) {
         User user = userRepository.findById(userId)
@@ -174,6 +168,7 @@ public class UserInfoService {
                 .orElseThrow(() -> new RuntimeException("Cultivated crop not found"));
     }
 
+    // 관심 작물 개별 조회
     @Transactional(readOnly = true)
     public UserCrop getSpecificInterestCrop(Long userId, Long cropId) {
         User user = userRepository.findById(userId)
@@ -184,9 +179,10 @@ public class UserInfoService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Interest crop not found"));
     }
+
+    // 사용자 이메일 조회
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
-
 }
