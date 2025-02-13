@@ -28,8 +28,8 @@ public class AiNewsService {
 
         // ✅ 4. 가장 대표적인 품종 하나만 선택 (없으면 기본값 설정)
         RdaVarietyResponse varietyInfo = varietyResponses.isEmpty()
-                                                 ? new RdaVarietyResponse(cropName, "정보 없음", "해당 작물의 품종 정보가 없습니다.")
-                                                 : varietyResponses.get(0);
+                ? new RdaVarietyResponse(cropName, "정보 없음", "해당 작물의 품종 정보가 없습니다.")
+                : varietyResponses.get(0);
 
 
         // ✅ 5. 프롬프트 템플릿 생성
@@ -93,8 +93,8 @@ public class AiNewsService {
         ));
 
         return AiNewsResponse.builder()
-                       .news(aiResponse)
-                       .build();
+                .news(aiResponse)
+                .build();
     }
 }
 

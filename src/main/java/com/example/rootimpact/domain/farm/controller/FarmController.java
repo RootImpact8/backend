@@ -121,8 +121,7 @@ public class FarmController {
     @GetMapping("/crop-news")
     public ResponseEntity<?> getCropNews(
             @Parameter(description = "작물 ID", required = true, example = "4")
-            @RequestParam(name = "userId") Long userId,
-            @RequestParam(name = "cropId") Long cropId,
+            @RequestParam Long cropId,
             @Parameter(hidden = true) Authentication authentication) {
         try {
             // 사용자 인증 정보에서 이메일 가져오기
@@ -130,15 +129,16 @@ public class FarmController {
             User user = userInfoService.getUserByEmail(userEmail);
 
             // 사용자 관심 작물인지 확인
-            UserCrop userCrop = userInfoService.getSpecificInterestCrop(userId, cropId);
+            UserCrop userCrop = userInfoService.getSpecificInterestCrop(user.getId(), cropId);
 
             if (userCrop == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new ErrorResponse("해당 작물은 관심 작물에 등록되어 있지 않습니다."));
             }
 
-            // AI 뉴스 제공
-            AiNewsResponse response = aiNewsService.getCropNews(userId, cropId);
+            // ✅ AI 뉴스 제공
+            AiNewsResponse response = aiNewsService.getCropNews(user.getId(), cropId);
+          
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("관심 작물 뉴스 조회 중 오류 발생: {}", e.getMessage(), e);

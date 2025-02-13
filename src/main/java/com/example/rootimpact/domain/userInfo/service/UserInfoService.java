@@ -16,6 +16,7 @@ import com.example.rootimpact.domain.userInfo.repository.UserLocationRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,43 @@ public class UserInfoService {
     private final UserLocationRepository locationRepository; // 사용자 거주지 저장소
     private final UserRepository userRepository; // 사용자 저장소
     private final UserInfoRepository userInfoRepository;
+    // ✅ 기존 작물 삭제 후 새로운 작물 추가 (업데이트)
+    @Transactional
+    public ResponseEntity<String> updateUserCrops(Long userId, CropSelectionRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 기존 작물 삭제 (재배 & 관심 작물 모두 제거)
+        userCropRepository.deleteAll(userCropRepository.findByUser(user));
+
+        // ✅ 재배 작물 새로 저장
+        Optional.ofNullable(request.getCultivatedCrops()).orElse(List.of()).forEach(cropName -> {
+            Crop crop = cropRepository.findByName(cropName)
+                    .orElseThrow(() -> new RuntimeException("Invalid crop name: " + cropName));
+
+            UserCrop userCrop = new UserCrop();
+            userCrop.setUser(user);
+            userCrop.setCropName(cropName);
+            userCrop.setCropId(crop.getId());
+            userCrop.setInterestCrop(false);
+            userCropRepository.save(userCrop);
+        });
+
+        // ✅ 관심 작물 새로 저장
+        Optional.ofNullable(request.getInterestCrops()).orElse(List.of()).forEach(cropName -> {
+            Crop crop = cropRepository.findByName(cropName)
+                    .orElseThrow(() -> new RuntimeException("Invalid crop name: " + cropName));
+
+            UserCrop userCrop = new UserCrop();
+            userCrop.setUser(user);
+            userCrop.setCropName(cropName);
+            userCrop.setCropId(crop.getId());
+            userCrop.setInterestCrop(true);
+            userCropRepository.save(userCrop);
+        });
+
+        return ResponseEntity.ok("사용자 작물 정보가 성공적으로 업데이트되었습니다.");
+    }
 
     // 사용자 이름 조회
     public UserInfoResponse getUserName(Long userId) {
