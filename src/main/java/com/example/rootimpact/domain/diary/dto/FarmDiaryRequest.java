@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -35,9 +34,8 @@ public class FarmDiaryRequest {
     @NotNull(message = "작업 ID는 필수입니다.")
     @Schema(description = "작업 ID", example = "2", required = true)
     private Long taskId;
-
-    @NotBlank(message = "일기 내용은 필수입니다.")
-    @Schema(description = "일기 내용", example = "Planted new seeds.", required = true)
+    
+    @Schema(description = "일기 내용", example = "Planted new seeds.")
     private String content;
 
     @Schema(description = "저장된 이미지 정보 목록")
