@@ -232,6 +232,7 @@ public class FarmDiaryService {
                 .collect(Collectors.toList());
     }
 
+    // 작물별 일기 조회
     public List<FarmDiaryResponse> findByCropId(Long cropId) {
         List<FarmDiary> diaries = farmDiaryRepository.findByUserCrop_CropId(cropId);
         return diaries.stream()
@@ -245,9 +246,8 @@ public class FarmDiaryService {
         FarmDiary farmDiary = farmDiaryRepository.findById(id).orElseThrow(()->new IllegalArgumentException("일기를 찾을 수 없습니다."));
         farmDiaryRepository.delete(farmDiary);
     }
-    /**
-     * ✅ 1️⃣ 특정 작물의 첫 번째 일기 작성 날짜(파종일) 조회
-     */
+
+    // 특정 작물의 첫 번째 일기 작성 날짜(파종일) 조회
     public LocalDate getFirstDiaryDate(Long userId, Long cropId) {
         return farmDiaryRepository.findTopByUserIdAndUserCrop_CropIdOrderByWriteDateAsc(userId, cropId)
                 .map(FarmDiary::getWriteDate)
@@ -264,9 +264,7 @@ public class FarmDiaryService {
         SOWING_TASK_IDS.put(2L, List.of(42L, 43L)); // 벼 (정식, 모내기)
     }
 
-    /**
-     * ✅ 파종(정식) 날짜 조회 (전체 일기 중에서 가장 오래된 해당 Task ID 기준)
-     */
+    // 파종(정식) 날짜 조회 (전체 일기 중에서 가장 오래된 해당 Task ID 기준)
     public LocalDate getFirstSowingDate(Long userId, Long cropId) {
         List<Long> taskIds = SOWING_TASK_IDS.getOrDefault(cropId, List.of());
         if (taskIds.isEmpty()) {
@@ -287,9 +285,7 @@ public class FarmDiaryService {
         return diaries.get(0).getWriteDate();
     }
 
-    /**
-     * ✅ AI를 활용한 예상 수확일 조회
-     */
+    // AI를 활용한 예상 수확일 조회
     public String getPredictedHarvestDate(Long userId, Long cropId) {
         LocalDate sowingDate = getFirstSowingDate(userId, cropId);
         WeatherResponse weatherResponse = weatherService.getWeatherByUserId(userId);
@@ -324,7 +320,7 @@ public class FarmDiaryService {
         return openAiService.getRecommendation(promptTemplate, variables);
     }
 
-
+    // 가장 최근 일기 조회
     @Transactional(readOnly = true)
     public FarmDiaryResponse getLastDiaryEntry(Long userId, Long cropId) {
         Optional<FarmDiary> lastDiary = farmDiaryRepository

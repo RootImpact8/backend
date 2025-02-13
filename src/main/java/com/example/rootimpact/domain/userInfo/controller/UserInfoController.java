@@ -33,9 +33,6 @@ public class UserInfoController {
     private final UserInfoService userInfoService;
     private final UserRepository userRepository;
 
-
-
-    // ✅ 사용자 이름 저장
     @Operation(summary = "사용자 이름 저장", description = "회원가입 후 사용자 이름을 저장합니다.")
     @PostMapping("/{userId}/name")
     public ResponseEntity<String> saveUserName(
@@ -46,7 +43,6 @@ public class UserInfoController {
         return ResponseEntity.ok("이름이 성공적으로 저장되었습니다.");
     }
 
-    // ✅ 사용자 이름 수정
     @Operation(summary = "사용자 이름 수정", description = "저장된 사용자 이름을 변경합니다.")
     @PutMapping("/{userId}/name")
     public ResponseEntity<String> updateUserName(
@@ -57,7 +53,6 @@ public class UserInfoController {
         return ResponseEntity.ok("이름이 성공적으로 변경되었습니다.");
     }
 
-    // ✅ 사용자 이름 조회
     @Operation(summary = "사용자 이름 조회", description = "사용자 ID로 이름을 조회합니다.")
     @GetMapping("/{userId}/name")
     public ResponseEntity<UserInfoResponse> getUserName(@PathVariable Long userId) {
@@ -72,8 +67,7 @@ public class UserInfoController {
         return ResponseEntity.ok(crops);
     }
 
-    @Operation(summary = "사용자 거주 지역 저장/수정",
-            description = "인증된 사용자의 거주 지역 정보를 저장 또는 수정합니다.")
+    @Operation(summary = "사용자 거주 지역 저장/수정", description = "인증된 사용자의 거주 지역 정보를 저장 또는 수정합니다.")
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/location")
     public ResponseEntity<String> saveUserLocation(
@@ -88,8 +82,7 @@ public class UserInfoController {
         return ResponseEntity.ok("User location saved successfully.");
     }
 
-    @Operation(summary = "사용자 재배 작물/관심 작물 저장",
-            description = "인증된 사용자의 재배 작물 및 관심 작물 정보를 저장합니다.")
+    @Operation(summary = "사용자 재배 작물/관심 작물 저장", description = "인증된 사용자의 재배 작물 및 관심 작물 정보를 저장합니다.")
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/crops")
     public ResponseEntity<String> saveUserCrops(
@@ -104,8 +97,7 @@ public class UserInfoController {
         return ResponseEntity.ok("User crops saved successfully.");
     }
 
-    @Operation(summary = "사용자 거주 지역 조회",
-            description = "인증된 사용자의 거주 지역 정보를 조회합니다.")
+    @Operation(summary = "사용자 거주 지역 조회", description = "인증된 사용자의 거주 지역 정보를 조회합니다.")
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/location")
     public ResponseEntity<UserLocation> getUserLocation(
@@ -118,8 +110,7 @@ public class UserInfoController {
         return ResponseEntity.ok(location);
     }
 
-    @Operation(summary = "사용자가 선택한 재배 작물 및 관심 작물 조회",
-            description = "인증된 사용자가 선택한 모든 재배 작물 및 관심 작물 목록을 조회합니다.")
+    @Operation(summary = "사용자가 선택한 재배 작물 및 관심 작물 조회", description = "인증된 사용자가 선택한 모든 재배 작물 및 관심 작물 목록을 조회합니다.")
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/user-crops")
     public ResponseEntity<Map<String, List<String>>> getUserCrops(
@@ -139,8 +130,7 @@ public class UserInfoController {
         return ResponseEntity.ok(cropsResponse);
     }
 
-    @Operation(summary = "사용자 재배 작물만 전체 조회",
-            description = "인증된 사용자의 모든 재배 작물 목록을 조회합니다.")
+    @Operation(summary = "사용자 재배 작물만 전체 조회", description = "인증된 사용자의 모든 재배 작물 목록을 조회합니다.")
     @Transactional(readOnly = true)
     @GetMapping("/crops/cultivated")
     public ResponseEntity<List<UserCrop>> getAllCultivatedCrops(
@@ -153,8 +143,7 @@ public class UserInfoController {
         return ResponseEntity.ok(crops);
     }
 
-    @Operation(summary = "사용자 관심 작물만 전체 조회",
-            description = "인증된 사용자의 모든 관심 작물 목록을 조회합니다.")
+    @Operation(summary = "사용자 관심 작물만 전체 조회", description = "인증된 사용자의 모든 관심 작물 목록을 조회합니다.")
     @Transactional(readOnly = true)
     @GetMapping("/crops/interest")
     public ResponseEntity<List<UserCrop>> getAllInterestCrops(
@@ -167,8 +156,7 @@ public class UserInfoController {
         return ResponseEntity.ok(crops);
     }
 
-    @Operation(summary = "사용자 재배 작물 개별 조회",
-            description = "인증된 사용자가 선택한 특정 재배 작물을 조회합니다.")
+    @Operation(summary = "사용자 재배 작물 개별 조회", description = "인증된 사용자가 선택한 특정 재배 작물을 조회합니다.")
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/crops/cultivated/{cropId}")
@@ -184,8 +172,7 @@ public class UserInfoController {
         return ResponseEntity.ok(crop);
     }
 
-    @Operation(summary = "사용자 관심 작물 개별 조회",
-            description = "인증된 사용자가 선택한 특정 관심 작물을 조회합니다.")
+    @Operation(summary = "사용자 관심 작물 개별 조회", description = "인증된 사용자가 선택한 특정 관심 작물을 조회합니다.")
     @Transactional(readOnly = true)
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/crops/interest/{cropId}")

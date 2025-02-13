@@ -13,7 +13,7 @@ public enum CropType {
     APPLE(5L, new CropInfo("400", "411", "05","사과")),
     PEPPER(6L, new CropInfo("200", "242", "00","고추"));
 
-    private final Long id; // 작물명
+    private final Long id; // 작물 ID
     private final CropInfo cropInfo; // 작물 코드 정보(부류코드, 품목코드, 품종코드)
 
     CropType(Long id, CropInfo cropInfo) {

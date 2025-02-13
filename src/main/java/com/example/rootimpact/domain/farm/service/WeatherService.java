@@ -26,7 +26,6 @@ public class WeatherService {
     public WeatherResponse getWeather(Authentication authentication) {
         String userEmail = authentication.getName();
 
-
         // 사용자 정보 가져오기
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("🚨 User not found"));
@@ -38,11 +37,11 @@ public class WeatherService {
             throw new RuntimeException("User location not found");
         }
 
-        // ✅ 사용자 거주지 정보를 "시 + 도" 형식으로 변환
+        // 사용자 거주지 정보를 "시 + 도" 형식으로 변환
         String fullAddress = String.format("%s %s", userLocation.getCity(), userLocation.getState());
 
 
-        // ✅ KakaoGeocodingService를 호출하여 위도/경도 가져오기
+        // KakaoGeocodingService를 호출하여 위도/경도 가져오기
         Map<String, Double> coordinates = kakaoGeocodingService.getCoordinates(fullAddress);
 
 
@@ -51,8 +50,6 @@ public class WeatherService {
                 "%s?key=%s&q=%f,%f&days=5&aqi=no&alerts=no",
                 BASE_URL, API_KEY, coordinates.get("lat"), coordinates.get("lng")
         );
-
-
 
         RestTemplate restTemplate = new RestTemplate();
         try {
@@ -66,29 +63,29 @@ public class WeatherService {
     }
 
     public WeatherResponse getWeatherByUserId(Long userId) {
-        // ✅ 1. 사용자 정보 조회
+        // 1. 사용자 정보 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("🚨 User not found"));
 
-        // ✅ 2. 사용자 위치 정보 조회
+        // 2. 사용자 위치 정보 조회
         UserLocation userLocation = userInfoService.getUserLocation(user.getId());
         if (userLocation == null) {
             throw new RuntimeException("🚨 User location not found");
         }
 
-        // ✅ 3. 사용자 거주지 정보를 "시 + 도" 형식으로 변환
+        // 3. 사용자 거주지 정보를 "시 + 도" 형식으로 변환
         String fullAddress = String.format("%s %s", userLocation.getCity(), userLocation.getState());
 
-        // ✅ 4. KakaoGeocodingService를 호출하여 위도/경도 가져오기
+        // 4. KakaoGeocodingService를 호출하여 위도/경도 가져오기
         Map<String, Double> coordinates = kakaoGeocodingService.getCoordinates(fullAddress);
 
-        // ✅ 5. Weather API 호출 URL 생성
+        // 5. Weather API 호출 URL 생성
         String url = String.format(
                 "%s?key=%s&q=%f,%f&days=5&aqi=no&alerts=no",
                 BASE_URL, API_KEY, coordinates.get("lat"), coordinates.get("lng")
         );
 
-        // ✅ 6. API 호출 및 응답 반환
+        // 6. API 호출 및 응답 반환
         try {
             return restTemplate.getForObject(url, WeatherResponse.class);
         } catch (Exception e) {

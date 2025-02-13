@@ -9,6 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
-    // ✅ 사용자 ID로 UserInfo 조회
+    // 사용자 ID로 UserInfo 조회
     Optional<UserInfo> findByUser_Id(Long userId);
 }

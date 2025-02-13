@@ -14,8 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class OpenAiService {
 
-
-     private final OpenAiChatClient openAiChatClient;
+    private final OpenAiChatClient openAiChatClient;
 
     public String getRecommendation(String promptTemplateText, Map<String, Object> variables) {
         // ✅ 프롬프트 템플릿 생성
