@@ -29,8 +29,8 @@ public class RdaVarietyService {
 
     private final RestTemplate restTemplate;
 
-    private final String API_KEY = "20250213XTCMNRTFNSMZQCDMEZ5G";
-    private final String BASE_URL = "http://api.nongsaro.go.kr/service/cropEbook/varietyList";
+    private final String API_KEY = "";//"20250213XTCMNRTFNSMZQCDMEZ5G";
+    private final String BASE_URL = "";//http://api.nongsaro.go.kr/service/cropEbook/varietyList";
 
     private final UserCropRepository userCropRepository;
 
