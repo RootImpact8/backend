@@ -161,4 +161,12 @@ public class FarmDiaryController {
         FarmDiaryResponse lastDiary = farmDiaryService.getLastDiaryEntry(userId, cropId);
         return ResponseEntity.ok(lastDiary);
     }
+    @Operation(summary = "파종일 조회", description = "특정 작물의 파종일을 조회합니다.")
+    @GetMapping("/sowling-date")
+    public LocalDate getSowlingDate(
+            @RequestParam(name = "userId") Long userId,
+            @RequestParam(name = "cropId") Long cropId
+    ) {
+        return farmDiaryService.getFirstSowingDate(userId, cropId);
+    }
 }

@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserCropRepository extends JpaRepository<UserCrop, Long> {
-
+    Optional<UserCrop> findFirstByUserIdAndCropId(Long userId, Long cropId);
     // 특정 사용자의 모든 작물 데이터 조회
     List<UserCrop> findByUser(User user);
 
