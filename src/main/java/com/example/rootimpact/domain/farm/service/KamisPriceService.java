@@ -7,6 +7,8 @@ import com.example.rootimpact.domain.farm.type.CropType;
 import com.example.rootimpact.domain.farm.util.DateUtils;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.service.UserInfoService;
+import com.example.rootimpact.global.error.ErrorCode;
+import com.example.rootimpact.global.exception.GlobalException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
@@ -75,7 +77,7 @@ public class KamisPriceService {
             return processResponse(response.getBody(), cropId);
         } catch (Exception e) {
             log.error("API 호출 실패: {}", e.getMessage());
-            throw new RuntimeException("가격 조회 실패: " + e.getMessage());
+            throw new GlobalException(ErrorCode.FAILED_PRICE_API, e.getMessage());
         }
     }
 
@@ -171,7 +173,7 @@ public class KamisPriceService {
 
         } catch (Exception e) {
             log.error("응답 처리 실패: {}", e.getMessage());
-            throw new RuntimeException("응답 처리 실패: " + e.getMessage());
+            throw new GlobalException(ErrorCode.FAILED_RESPONSE_PROCESSING, e.getMessage());
         }
     }
 

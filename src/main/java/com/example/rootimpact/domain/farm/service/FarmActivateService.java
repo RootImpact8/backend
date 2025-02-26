@@ -7,6 +7,8 @@ import com.example.rootimpact.domain.farm.dto.ErrorResponse;
 import com.example.rootimpact.domain.farm.dto.WeatherResponse;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.repository.UserCropRepository;
+import com.example.rootimpact.global.error.ErrorCode;
+import com.example.rootimpact.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +34,8 @@ public class FarmActivateService {
             log.debug("🟢 AI 추천 요청: userId={}, cropId={}", userId, cropId);
 
             UserCrop userCrop = userCropRepository.findFirstByUserIdAndCropId(userId, cropId)
-                    .orElseThrow(() -> new RuntimeException("❌ 작물을 찾을 수 없습니다: userId=" + userId + ", cropId=" + cropId));
+                    .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER_CROP));
+            //("❌ 작물을 찾을 수 없습니다: userId=" + userId + ", cropId=" + cropId)
             log.debug("🌱 조회된 UserCrop: {}", userCrop.getCropName());
 
             // fetch join을 사용하여 한 번에 데이터를 가져옴

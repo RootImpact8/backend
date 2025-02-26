@@ -5,6 +5,8 @@ import com.example.rootimpact.domain.user.entity.User;
 import com.example.rootimpact.domain.userInfo.entity.UserLocation;
 import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import com.example.rootimpact.domain.user.repository.UserRepository;
+import com.example.rootimpact.global.error.ErrorCode;
+import com.example.rootimpact.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -28,13 +30,13 @@ public class WeatherService {
 
         // 사용자 정보 가져오기
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("🚨 User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
 
         UserLocation userLocation = userInfoService.getUserLocation(user.getId());
         if (userLocation == null) {
 
-            throw new RuntimeException("User location not found");
+            throw new GlobalException(ErrorCode.NOT_FOUND_USER_LOCATION);
         }
 
         // 사용자 거주지 정보를 "시 + 도" 형식으로 변환
@@ -58,19 +60,19 @@ public class WeatherService {
             return response;
         } catch (Exception e) {
 
-            throw new RuntimeException("Failed to fetch weather data: " + e.getMessage());
+            throw new GlobalException(ErrorCode.FAILED_FETCH_WEATHER, e.getMessage());
         }
     }
 
     public WeatherResponse getWeatherByUserId(Long userId) {
         // 1. 사용자 정보 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("🚨 User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         // 2. 사용자 위치 정보 조회
         UserLocation userLocation = userInfoService.getUserLocation(user.getId());
         if (userLocation == null) {
-            throw new RuntimeException("🚨 User location not found");
+            throw new GlobalException(ErrorCode.NOT_FOUND_USER_LOCATION);
         }
 
         // 3. 사용자 거주지 정보를 "시 + 도" 형식으로 변환
@@ -89,7 +91,7 @@ public class WeatherService {
         try {
             return restTemplate.getForObject(url, WeatherResponse.class);
         } catch (Exception e) {
-            throw new RuntimeException("🚨 Failed to fetch weather data: " + e.getMessage());
+            throw new GlobalException(ErrorCode.FAILED_FETCH_WEATHER, e.getMessage());
         }
     }
 }
