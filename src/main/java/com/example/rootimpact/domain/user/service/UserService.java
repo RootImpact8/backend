@@ -4,14 +4,14 @@ import com.example.rootimpact.domain.user.dto.LoginRequest;
 import com.example.rootimpact.domain.user.dto.LoginResponse;
 import com.example.rootimpact.domain.user.dto.RegisterRequest;
 import com.example.rootimpact.domain.user.entity.User;
-import com.example.rootimpact.domain.user.exception.UserNotFoundException;
 import com.example.rootimpact.domain.user.repository.UserRepository;
+import com.example.rootimpact.global.exception.GlobalException;
+import com.example.rootimpact.global.error.ErrorCode;
 import com.example.rootimpact.global.util.JwtUtil;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class UserService {
     public void registerUser(RegisterRequest registerRequest) {
         Optional<User> existingUser = userRepository.findByEmail(registerRequest.getEmail());
         if (existingUser.isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new GlobalException(ErrorCode.ALREADY_REGISTERED_USER_EMAIL);
         }
 
         // 비밀번호 암호화 후 저장
@@ -42,11 +42,11 @@ public class UserService {
     public LoginResponse login(LoginRequest loginRequest) {
         // 이메일로 사용자 조회
         User user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new GlobalException(ErrorCode.NOT_EXIST_USER_PASSWORD);
         }
 
         // JWT 토큰 생성 (jwtUtil을 인스턴스로 사용)

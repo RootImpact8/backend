@@ -129,7 +129,7 @@ public class FarmDiaryController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "첫 번째 일기 작성 날짜(파종일) 조회", description = "특정 작물의 첫 번째 일기 작성 날짜를 조회합니다.")
+    @Operation(summary = "첫 번째 일기 작성 날짜 조회", description = "특정 작물의 첫 번째 일기 작성 날짜를 조회합니다.")
     @GetMapping("/first-diary-date")
     public ResponseEntity<LocalDate> getFirstDiaryDate(
             @Parameter(description = "사용자 ID", required = true)
@@ -161,6 +161,7 @@ public class FarmDiaryController {
         FarmDiaryResponse lastDiary = farmDiaryService.getLastDiaryEntry(userId, cropId);
         return ResponseEntity.ok(lastDiary);
     }
+
     @Operation(summary = "파종일 조회", description = "특정 작물의 파종일을 조회합니다.")
     @GetMapping("/sowling-date")
     public LocalDate getSowlingDate(

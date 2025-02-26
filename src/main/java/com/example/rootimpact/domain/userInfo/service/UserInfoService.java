@@ -13,6 +13,8 @@ import com.example.rootimpact.domain.userInfo.repository.CropRepository;
 import com.example.rootimpact.domain.userInfo.repository.UserCropRepository;
 import com.example.rootimpact.domain.userInfo.repository.UserInfoRepository;
 import com.example.rootimpact.domain.userInfo.repository.UserLocationRepository;
+import com.example.rootimpact.global.error.ErrorCode;
+import com.example.rootimpact.global.exception.GlobalException;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,7 @@ public class UserInfoService {
     @Transactional
     public ResponseEntity<String> updateUserCrops(Long userId, CropSelectionRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         // 기존 작물 삭제 (재배 & 관심 작물 모두 제거)
         userCropRepository.deleteAll(userCropRepository.findByUser(user));
@@ -41,7 +43,7 @@ public class UserInfoService {
         // ✅ 재배 작물 새로 저장
         Optional.ofNullable(request.getCultivatedCrops()).orElse(List.of()).forEach(cropName -> {
             Crop crop = cropRepository.findByName(cropName)
-                    .orElseThrow(() -> new RuntimeException("Invalid crop name: " + cropName));
+                    .orElseThrow(() -> new GlobalException(ErrorCode.INVALID_CROP_NAME, cropName));
 
             UserCrop userCrop = new UserCrop();
             userCrop.setUser(user);
@@ -54,7 +56,7 @@ public class UserInfoService {
         // ✅ 관심 작물 새로 저장
         Optional.ofNullable(request.getInterestCrops()).orElse(List.of()).forEach(cropName -> {
             Crop crop = cropRepository.findByName(cropName)
-                    .orElseThrow(() -> new RuntimeException("Invalid crop name: " + cropName));
+                    .orElseThrow(() -> new GlobalException(ErrorCode.INVALID_CROP_NAME, cropName));
 
             UserCrop userCrop = new UserCrop();
             userCrop.setUser(user);
@@ -70,7 +72,7 @@ public class UserInfoService {
     // 사용자 이름 조회
     public UserInfoResponse getUserName(Long userId) {
         UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("User info not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER_INFO));
 
         UserInfoResponse response = new UserInfoResponse();
         response.setName(userInfo.getName());
@@ -82,7 +84,7 @@ public class UserInfoService {
     @Transactional
     public void saveUserName(Long userId, String name) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found")); // ✅ 유저 조회
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER)); // ✅ 유저 조회
 
         UserInfo userInfo = new UserInfo();
         userInfo.setUser(user);  // ✅ `user` 객체 설정
@@ -95,7 +97,7 @@ public class UserInfoService {
     @Transactional
     public void updateUserName(Long userId, String name) {
         UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
-                .orElseThrow(() -> new RuntimeException("User info not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER_INFO));
 
         userInfo.setName(name);
         userInfoRepository.save(userInfo);
@@ -109,7 +111,7 @@ public class UserInfoService {
     // 사용자 거주 지역 저장 (기존 데이터 삭제 후 새로운 데이터 저장)
     public void saveUserLocation(Long userId, LocationRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         locationRepository.deleteAll(locationRepository.findByUser(user));
 
@@ -124,17 +126,17 @@ public class UserInfoService {
     // 사용자 거주 지역 조회
     public UserLocation getUserLocation(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         return locationRepository.findByUser(user).stream()
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("User location not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER_LOCATION));
     }
 
     // 재배 작물 & 관심 작물 저장
     public void saveUserCrops(Long userId, CropSelectionRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         List<UserCrop> existingCrops = userCropRepository.findByUser(user);
 
@@ -145,7 +147,7 @@ public class UserInfoService {
 
                 // Crop 엔티티에서 해당 작물명의 id 찾기
                 Crop crop = cropRepository.findByName(cropName)
-                        .orElseThrow(() -> new RuntimeException("Invalid crop name: " + cropName));
+                        .orElseThrow(() -> new GlobalException(ErrorCode.INVALID_CROP_NAME, cropName));
 
                 UserCrop userCrop = new UserCrop();
                 userCrop.setUser(user);
@@ -163,7 +165,7 @@ public class UserInfoService {
 
                 // Crop 엔티티에서 해당 작물명의 id 찾기
                 Crop crop = cropRepository.findByName(cropName)
-                        .orElseThrow(() -> new RuntimeException("Invalid crop name: " + cropName));
+                        .orElseThrow(() -> new GlobalException(ErrorCode.INVALID_CROP_NAME, cropName));
 
                 UserCrop userCrop = new UserCrop();
                 userCrop.setUser(user);
@@ -180,7 +182,7 @@ public class UserInfoService {
     @Transactional(readOnly = true)
     public List<UserCrop> getCultivatedCrops(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         return userCropRepository.findCultivatedCropsByUser(user);
     }
@@ -189,7 +191,7 @@ public class UserInfoService {
     @Transactional(readOnly = true)
     public List<UserCrop> getInterestCrops(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         return userCropRepository.findInterestCropsByUser(user);
     }
@@ -198,29 +200,29 @@ public class UserInfoService {
     @Transactional(readOnly = true)
     public UserCrop getSpecificCultivatedCrop(Long userId, Long cropId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         return userCropRepository.findByUser(user).stream()
                 .filter(crop -> crop.getCropId().equals(cropId) && !crop.isInterestCrop())
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Cultivated crop not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_CULTIVATED_CROP));
     }
 
     // 관심 작물 개별 조회
     @Transactional(readOnly = true)
     public UserCrop getSpecificInterestCrop(Long userId, Long cropId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         return userCropRepository.findByUser(user).stream()
                 .filter(crop -> crop.getCropId().equals(cropId) && crop.isInterestCrop())
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Interest crop not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_INTEREST_CROP));
     }
 
     // 사용자 이메일 조회
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER));
     }
 }

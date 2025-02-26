@@ -1,5 +1,7 @@
 package com.example.rootimpact.domain.farm.service;
 
+import com.example.rootimpact.global.error.ErrorCode;
+import com.example.rootimpact.global.exception.GlobalException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -48,6 +50,6 @@ public class KakaoGeocodingService {
 
         }
 
-        throw new RuntimeException("Failed to fetch coordinates for the given address.");
+        throw new GlobalException(ErrorCode.FAILED_FETCH_COORDINATES);
     }
 }

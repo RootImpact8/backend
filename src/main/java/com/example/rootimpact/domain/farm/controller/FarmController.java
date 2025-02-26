@@ -1,7 +1,6 @@
 package com.example.rootimpact.domain.farm.controller;
 
 import com.example.rootimpact.domain.farm.dto.AiNewsResponse;
-import com.example.rootimpact.domain.farm.dto.AiRecommendationResponse;
 import com.example.rootimpact.domain.farm.dto.KamisPriceResponse;
 import com.example.rootimpact.domain.farm.dto.RdaVarietyResponse;
 import com.example.rootimpact.domain.farm.dto.WeatherResponse;
@@ -13,6 +12,7 @@ import com.example.rootimpact.domain.farm.service.WeatherService;
 import com.example.rootimpact.domain.user.entity.User;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.service.UserInfoService;
+import com.example.rootimpact.global.error.ErrorCode;
 import com.example.rootimpact.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -93,14 +93,14 @@ public class FarmController {
 
             if (response.getPriceData() == null) {
                 return ResponseEntity.ok()
-                        .body(new ErrorResponse("해당 작물의 가격 정보가 없습니다."));
+                        .body(ErrorResponse.of(ErrorCode.NO_PRICE_DATA));
             }
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("가격 정보 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("서버 오류가 발생했습니다."));
+                    .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
         }
     }
 
@@ -130,7 +130,7 @@ public class FarmController {
 
             if (userCrop == null) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new ErrorResponse("해당 작물은 관심 작물에 등록되어 있지 않습니다."));
+                        .body(ErrorResponse.of(ErrorCode.NO_INTEREST_CROP));
             }
 
             // ✅ AI 뉴스 제공
@@ -140,7 +140,7 @@ public class FarmController {
         } catch (Exception e) {
             log.error("관심 작물 뉴스 조회 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("서버 오류가 발생했습니다."));
+                    .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
         }
     }
 }

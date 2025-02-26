@@ -4,6 +4,8 @@ import com.example.rootimpact.domain.farm.dto.RdaVarietyResponse;
 import com.example.rootimpact.domain.farm.type.CropCategory;
 import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.repository.UserCropRepository;
+import com.example.rootimpact.global.error.ErrorCode;
+import com.example.rootimpact.global.exception.GlobalException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +52,7 @@ public class RdaVarietyService {
         CropCategory category = Arrays.stream(CropCategory.values())
                                         .filter(c -> c.getId().equals(cropId))
                                         .findFirst()
-                                        .orElseThrow(() -> new IllegalArgumentException("Invalid crop name: " + cropId));
+                                        .orElseThrow(() -> new GlobalException(ErrorCode.INVALID_CROP_NAME, cropId));
 
         log.info("Found category: {}, code: {}", category.getCropName(), category.getCode());
         return getRdaVarietyList(category);

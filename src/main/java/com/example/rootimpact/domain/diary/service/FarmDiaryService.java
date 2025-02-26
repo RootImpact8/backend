@@ -15,6 +15,8 @@ import com.example.rootimpact.domain.userInfo.entity.UserCrop;
 import com.example.rootimpact.domain.userInfo.repository.UserCropRepository;
 import com.example.rootimpact.domain.userInfo.service.UserInfoService;
 import com.example.rootimpact.global.config.FileConfig;
+import com.example.rootimpact.global.error.ErrorCode;
+import com.example.rootimpact.global.exception.GlobalException;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -66,8 +68,7 @@ public class FarmDiaryService {
                 TempImageResponse uploadedImage = saveImage(image);
                 uploadedImages.add(uploadedImage);
             } catch (IOException e) {
-                log.error("이미지 업로드 실패: {}", e.getMessage());
-                throw new RuntimeException("이미지 업로드에 실패했습니다.", e);
+                throw new GlobalException(ErrorCode.FAILED_UPLOAD_IMG);
             }
         }
 
@@ -108,28 +109,28 @@ public class FarmDiaryService {
 
         // null 체크 추가
         if (request.getUserId() == null) {
-            throw new IllegalArgumentException("사용자 ID는 필수입니다.");
+            throw new GlobalException(ErrorCode.REQUIRED_USER_ID);
         }
         if (request.getTaskId() == null) {
-            throw new IllegalArgumentException("작업 ID는 필수입니다.");
+            throw new GlobalException(ErrorCode.REQUIRED_TASK_ID);
         }
         if (request.getUserCropName() == null || request.getUserCropName().trim().isEmpty()) {
-            throw new IllegalArgumentException("작물 이름은 필수입니다.");
+            throw new GlobalException(ErrorCode.REQUIRED_CROP_NAME);
         }
 
         // 사용자 조회
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(()->new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(()->new GlobalException(ErrorCode.NOT_FOUND_USER));
 
         // UserCrop 조회
         UserCrop userCrop = userInfoService.getCultivatedCrops(request.getUserId()).stream()
                 .filter(crop -> crop.getCropName().equals(request.getUserCropName()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 작물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER_CROP));
 
         // TaskType 조회
         Task task = taskRepository.findById(request.getTaskId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 작업을 찾을 수 없습니다."));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_TASK_TYPE));
 
         // 영농일지 생성
         FarmDiary farmDiary = FarmDiary.builder()
@@ -159,7 +160,6 @@ public class FarmDiaryService {
         return new FarmDiaryResponse(saved);
     }
 
-
     // 일기 수정 메서드
     @Transactional
     public FarmDiaryResponse update(Long diaryId, FarmDiaryRequest request) {
@@ -168,18 +168,18 @@ public class FarmDiaryService {
 
         // 작성자 본인 확인
         if (!farmDiary.getUser().getId().equals(request.getUserId())) {
-            throw new IllegalArgumentException("영농일지 수정 권한이 없습니다.");
+            throw new GlobalException(ErrorCode.NOT_FOUND_USER);
         }
         ;
         // UserCrop 조회
         UserCrop userCrop = userCropRepository.findCultivatedCropsByUser(farmDiary.getUser()).stream()
                 .filter(crop -> crop.getCropName().equals(request.getUserCropName()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("해당 작물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER_CROP));
 
         // Task 조회
         Task task = taskRepository.findById(request.getTaskId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 작업을 찾을 수 없습니다."));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_TASK_TYPE));
 
         // 기존 이미지 삭제
         if (request.getDeleteImageIds() != null && !request.getDeleteImageIds().isEmpty()) {
@@ -251,7 +251,7 @@ public class FarmDiaryService {
     public LocalDate getFirstDiaryDate(Long userId, Long cropId) {
         return farmDiaryRepository.findTopByUserIdAndUserCrop_CropIdOrderByWriteDateAsc(userId, cropId)
                 .map(FarmDiary::getWriteDate)
-                .orElseThrow(() -> new RuntimeException("첫 번째 일기를 찾을 수 없습니다."));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_FIRST_DIARY));
     }
     // SOWING_TASK_IDS: 작물별 파종/묘목 관련 작업 ID 매핑 (숫자로 정의)
     private static final Map<Long, List<Long>> SOWING_TASK_IDS = new HashMap<>();
@@ -265,14 +265,11 @@ public class FarmDiaryService {
         SOWING_TASK_IDS.put(2L, List.of(42L, 43L));   // 벼 (정식, 모내기)
     }
 
-    /**
-     * 파종(정식) 또는 묘목 관련 단어가 있는 영농일기 중 가장 오래된 기록의 작성일을 파종일로 반환합니다.
-     * 만약 해당하는 기록이 없으면 null을 반환합니다.
-     */
+    // 파종(정식) 또는 묘목 관련 단어가 있는 영농일기 중 가장 오래된 기록의 작성일을 파종일로 반환
     public LocalDate getFirstSowingDate(Long userId, Long cropId) {
         List<Long> taskIds = SOWING_TASK_IDS.getOrDefault(cropId, List.of());
         if (taskIds.isEmpty()) {
-            throw new RuntimeException("해당 작물의 파종 기준 작업이 정의되지 않았습니다: " + cropId);
+            throw new GlobalException(ErrorCode.NOT_FOUND_SOWLING_TASK, cropId);
         }
 
         // 파종(정식)/묘목 관련 작업 ID 목록에 해당하는 영농일기를 작성일 기준 오름차순으로 조회
@@ -282,6 +279,7 @@ public class FarmDiaryService {
                 log.info("📅 [{}] 날짜: {}, Task ID: {}", cropId, diary.getWriteDate(), diary.getTask().getId())
         );
 
+        // 만약 해당하는 기록이 없으면 null 반환
         if (diaries.isEmpty()) {
             log.info("파종(정식)/묘목 관련 활동이 기록된 일기가 없습니다.");
             return null;
@@ -290,12 +288,11 @@ public class FarmDiaryService {
         return diaries.get(0).getWriteDate();
     }
 
-    /**
-     * AI를 활용하여 예상 수확일을 계산합니다.
-     * 파종(정식)/묘목 관련 일기가 없으면 null을 반환합니다.
-     */
+    // AI를 활용하여 예상 수확일 계산
     public String getPredictedHarvestDate(Long userId, Long cropId) {
         LocalDate sowingDate = getFirstSowingDate(userId, cropId);
+
+        // 파종(정식)/묘목 관련 일기가 없으면 null 반환
         if (sowingDate == null) {
             return null;
         }
@@ -305,7 +302,7 @@ public class FarmDiaryService {
 
         // UserCrop 정보를 조회 (첫 번째 결과만 사용)
         UserCrop userCrop = userCropRepository.findFirstByUserIdAndCropId(userId, cropId)
-                .orElseThrow(() -> new RuntimeException("작물을 찾을 수 없습니다"));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_USER_CROP));
 
         String promptTemplate = """
             당신은 농업 전문가입니다.
@@ -334,6 +331,7 @@ public class FarmDiaryService {
         // AI 서비스 호출하여 예상 수확일 반환
         return openAiService.getRecommendation(promptTemplate, variables);
     }
+
     // 가장 최근 일기 조회
     @Transactional(readOnly = true)
     public FarmDiaryResponse getLastDiaryEntry(Long userId, Long cropId) {
@@ -341,8 +339,7 @@ public class FarmDiaryService {
                 .findTopByUserIdAndUserCrop_CropIdOrderByWriteDateDesc(userId, cropId);
 
         return lastDiary.map(FarmDiaryResponse::new)
-                .orElseThrow(() -> new RuntimeException("해당 작물에 대한 작성된 영농일기가 없습니다."));
+                .orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_CROP_DIARY));
     }
-
 
 }
