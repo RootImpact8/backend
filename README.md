@@ -1,4 +1,4 @@
-# <div align="center"> **[🏆대상 수상작] AI 영농일지 플랫폼 : 싹SAC :seedling:**</div>
+# <div align="center"> **[🏆대상 수상작] AI 영농일지 플랫폼 : 싹 SAC :seedling:**</div>
 ![Image](https://github.com/user-attachments/assets/f1aca800-a39f-4afe-9263-6438b5264541)
 <br/>
 <br/>
